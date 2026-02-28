@@ -149,6 +149,6 @@ def summarize(results):
     }
 
 
-# Start loading CryptoBERT in background immediately
+# Start loading 
 if USE_BERT:
     threading.Thread(target=load_model, daemon=True).start()

@@ -1,4 +1,3 @@
-import subprocess, sys
 
 from flask import Flask, jsonify, render_template_string, redirect
 import requests, time, threading
