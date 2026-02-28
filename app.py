@@ -1,14 +1,5 @@
 import subprocess, sys
 
-def install_deps():
-    for dep in ["flask", "requests", "vaderSentiment"]:
-        try: __import__(dep.replace("-","_"))
-        except ImportError:
-            print(f"Installing {dep}...")
-            subprocess.check_call([sys.executable,"-m","pip","install",dep,"-q"])
-
-install_deps()
-
 from flask import Flask, jsonify, render_template_string, redirect
 import requests, time, threading
 from datetime import datetime
