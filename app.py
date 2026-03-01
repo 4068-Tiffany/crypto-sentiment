@@ -1,7 +1,18 @@
+import subprocess, sys
+
+def install_deps():
+    for dep in ["flask", "requests", "vaderSentiment"]:
+        try: __import__(dep.replace("-","_"))
+        except ImportError:
+            print(f"Installing {dep}...")
+            subprocess.check_call([sys.executable,"-m","pip","install",dep,"-q"])
+
+install_deps()
+
 from flask import Flask, jsonify, render_template_string, redirect
 import requests, time, threading
 from datetime import datetime
-from sentiment import analyze_posts, summarize
+from sentiment import analyze_posts, summarize, _pipeline, USE_BERT
 
 app     = Flask(__name__)
 cache   = {"data": None, "last_updated": None, "loading": False}
@@ -29,19 +40,12 @@ def classify(s):
 
 def run_analysis():
     cache["loading"] = True
-    print("🔄 Starting analysis...")
     posts = []
     for sub in SUBREDDITS:
-        print(f"📡 Fetching r/{sub}...")
-        result = fetch_sub(sub)
-        print(f"✅ Got {len(result)} posts from r/{sub}")
-        posts.extend(result)
-        time.sleep(0.8)
-    print(f"📦 Total posts: {len(posts)}")
+        posts.extend(fetch_sub(sub)); time.sleep(0.8)
     results  = analyze_posts(posts)
     summary  = summarize(results)
     price, change = get_price()
-    print(f"💰 BTC Price: {price}")
     sub_stats = {}
     for sub in SUBREDDITS:
         subs = [r for r in results if r["source"]==f"r/{sub}"]
@@ -58,7 +62,8 @@ def run_analysis():
     }
     cache["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cache["loading"] = False
-    print(f"✅ Done! {summary['total']} posts — {summary['overall']}")
+    print(f"✅ {summary['total']} posts — {summary['overall']} ({summary['method']})")
+
 def bg_loop():
     while True: run_analysis(); time.sleep(REFRESH_SECS)
 
@@ -276,9 +281,14 @@ nav{
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
 
-@media(max-width:1000px){
-  nav,. page{padding-left:20px;padding-right:20px}
-  .page{padding:24px 20px 60px}
+@media(max-width:768px){
+  nav{padding:0 16px;height:56px}
+  .nav-links{display:none}
+  .page{padding:16px 12px 60px}
+  .logo-gem{width:28px;height:28px;font-size:0.9rem}
+  .nav-logo{font-size:1rem;letter-spacing:2px}
+  .live-pip{display:none}
+  .btn{font-size:0.55rem;padding:6px 12px}
 }
 """
 
@@ -317,7 +327,7 @@ DASHBOARD_HTML = """<!DOCTYPE html><html lang="en"><head>
 <div class="page">
 
   <!-- HERO GRID -->
-  <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:18px;margin-bottom:24px" class="anim">
+  <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:18px;margin-bottom:24px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))" class="anim">
 
     <!-- BTC Price -->
     <div class="card glow-cyan edge-cyan" style="padding:28px 32px">
@@ -368,7 +378,7 @@ DASHBOARD_HTML = """<!DOCTYPE html><html lang="en"><head>
 
   <!-- GAUGE ROW -->
   <div class="section-title anim" style="animation-delay:0.1s">Sentiment Breakdown</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px" class="anim" style="animation-delay:0.15s">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:24px" class="anim" style="animation-delay:0.15s">
 
     <!-- Bull -->
     <div class="card edge-green" style="padding:32px;border-color:rgba(0,255,136,0.2);box-shadow:0 0 0 1px rgba(0,255,136,0.1)">
@@ -417,7 +427,7 @@ DASHBOARD_HTML = """<!DOCTYPE html><html lang="en"><head>
   </div>
 
   <!-- BOTTOM -->
-  <div style="display:grid;grid-template-columns:380px 1fr;gap:18px" class="anim" style="animation-delay:0.2s">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px" class="anim" style="animation-delay:0.2s">
     <div class="card glow-cyan edge-cyan" style="padding:28px">
       <div class="section-title" style="margin-bottom:20px">Distribution</div>
       <div style="position:relative;height:280px"><canvas id="donut"></canvas></div>
@@ -639,7 +649,7 @@ SOURCES_HTML = """<!DOCTYPE html><html lang="en"><head>
     <h1 style="font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;color:white;letter-spacing:2px">Subreddit <span style="color:var(--magenta)">Intelligence</span></h1>
   </div>
 
-  <div id="subGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:28px" class="anim"></div>
+  <div id="subGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:28px" class="anim"></div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="anim" style="animation-delay:0.15s">
     <div class="card glow-cyan edge-cyan" style="padding:28px">
@@ -746,7 +756,7 @@ ABOUT_HTML = """<!DOCTYPE html><html lang="en"><head>
 
   <div class="card glow-cyan edge-cyan anim" style="padding:32px;margin-top:24px;animation-delay:0.5s">
     <div class="mono" style="font-size:0.6rem;letter-spacing:3px;color:var(--muted);margin-bottom:16px">◈ TECH STACK</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px">
       {tech}
     </div>
   </div>
@@ -785,7 +795,7 @@ def make_tech_chip(name, color):
     return f'<div style="background:{bg};border:1px solid {bc};border-radius:8px;padding:12px;text-align:center"><div class="mono" style="font-size:0.7rem;color:{tc};letter-spacing:1px">{name}</div></div>'
 
 ABOUT_CARDS = (
-    make_about_card(1,'📡','Data Collection','We scrape the latest posts from 4 Bitcoin subreddits r/Bitcoin, r/CryptoCurrency, r/BitcoinMarkets, and r/CryptoMarkets using Reddit\'s public JSON API. No API key required. We collect 25 posts per subreddit, for 100 total.','cyan',0.05) +
+    make_about_card(1,'📡','Data Collection','We scrape the latest posts from 4 Bitcoin subreddits — r/Bitcoin, r/CryptoCurrency, r/BitcoinMarkets, and r/CryptoMarkets — using Reddit\'s public JSON API. No API key required. We collect 25 posts per subreddit, for 100 total.','cyan',0.05) +
     make_about_card(2,'🧠','Sentiment Analysis','Each post is analyzed using VADER (Valence Aware Dictionary and sEntiment Reasoner), an NLP model built specifically for social media. It returns a compound score from -1 (most negative) to +1 (most positive).','mag',0.1) +
     make_about_card(3,'🎯','Crypto Keyword Boosting','We enhance VADER\'s score with a custom crypto keyword layer. Words like "moon", "hodl", and "ath" boost the score bullish, while "crash", "rug", and "liquidation" push it bearish. This makes the model crypto-aware.','green',0.15) +
     make_about_card(4,'📊','Classification','Posts scoring ≥ 0.05 are BULLISH, ≤ -0.05 are BEARISH, and everything in between is NEUTRAL. The overall market sentiment is determined by the average compound score across all 100 posts.','yellow',0.2)
