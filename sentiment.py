@@ -5,7 +5,7 @@ import threading
 MODEL_NAME    = "kk08/CryptoBERT"
 BATCH_SIZE    = 8      # process 8 posts at a time (CPU friendly)
 MAX_LENGTH    = 128    # truncate long posts
-USE_BERT      = True   # set False to force VADER only
+USE_BERT      = False   # set False to force VADER only
 # ──────────────────────────────────────────────────────────
 
 vader     = SentimentIntensityAnalyzer()
