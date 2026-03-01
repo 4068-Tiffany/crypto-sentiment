@@ -284,6 +284,11 @@ nav{
 @media(max-width:768px){
   nav{padding:0 16px;height:56px}
   .nav-links{display:none}
+  .hamburger{display:flex!important}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:rgba(1,5,15,0.98);border-bottom:1px solid var(--border2);padding:16px;flex-direction:column;gap:8px;z-index:99;backdrop-filter:blur(20px)}
+  .mobile-menu.open{display:flex}
+  .mobile-menu a{font-family:'Share Tech Mono',monospace;font-size:0.75rem;letter-spacing:3px;color:var(--muted);text-decoration:none;padding:14px 16px;border-radius:8px;border:1px solid var(--border);transition:all 0.2s}
+  .mobile-menu a:hover,.mobile-menu a.active{color:var(--cyan);border-color:rgba(0,245,255,0.3);background:rgba(0,245,255,0.06)}
   .page{padding:16px 12px 60px}
   .logo-gem{width:28px;height:28px;font-size:0.9rem}
   .nav-logo{font-size:1rem;letter-spacing:2px}
@@ -310,8 +315,20 @@ NAV_TEMPLATE = """
   <div class="nav-right">
     <div class="live-pip"><div class="pip-dot"></div>LIVE</div>
     <button class="btn" id="refreshBtn" onclick="manualRefresh()">↻ REFRESH</button>
+    <button class="hamburger" onclick="toggleMenu()" style="display:none;background:transparent;border:1px solid var(--border2);color:var(--cyan);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:1.1rem">☰</button>
   </div>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="/" class="{d}">◈ DASHBOARD</a>
+  <a href="/posts" class="{p}">◈ POSTS</a>
+  <a href="/sources" class="{s}">◈ SOURCES</a>
+  <a href="/about" class="{a}">◈ ABOUT</a>
+</div>
+<script>
+function toggleMenu(){{
+  document.getElementById('mobileMenu').classList.toggle('open');
+}}
+</script>
 """
 
 # ═══════════════════════════════════════════════════════════
