@@ -874,7 +874,7 @@ def api_refresh():
         threading.Thread(target=run_analysis, daemon=True).start()
     return jsonify({"status":"started"})
 
+import os
+
 if __name__ == "__main__":
-    threading.Thread(target=bg_loop, daemon=True).start()
-    print("\n🚀 BTC Pulse → http://localhost:5000\n")
-    app.run(debug=False, port=5000)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
