@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, render_template_string, redirect
 import requests, time, threading
 from datetime import datetime
-from sentiment import analyze_posts, summarize, _pipeline, USE_BERT
+from sentiment import analyze_posts, summarize
 
 app     = Flask(__name__)
 cache   = {"data": None, "last_updated": None, "loading": False}
