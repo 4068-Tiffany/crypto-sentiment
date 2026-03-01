@@ -29,12 +29,19 @@ def classify(s):
 
 def run_analysis():
     cache["loading"] = True
+    print("🔄 Starting analysis...")
     posts = []
     for sub in SUBREDDITS:
-        posts.extend(fetch_sub(sub)); time.sleep(0.8)
+        print(f"📡 Fetching r/{sub}...")
+        result = fetch_sub(sub)
+        print(f"✅ Got {len(result)} posts from r/{sub}")
+        posts.extend(result)
+        time.sleep(0.8)
+    print(f"📦 Total posts: {len(posts)}")
     results  = analyze_posts(posts)
     summary  = summarize(results)
     price, change = get_price()
+    print(f"💰 BTC Price: {price}")
     sub_stats = {}
     for sub in SUBREDDITS:
         subs = [r for r in results if r["source"]==f"r/{sub}"]
@@ -51,8 +58,7 @@ def run_analysis():
     }
     cache["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cache["loading"] = False
-    print(f"✅ {summary['total']} posts — {summary['overall']} ({summary['method']})")
-
+    print(f"✅ Done! {summary['total']} posts — {summary['overall']}")
 def bg_loop():
     while True: run_analysis(); time.sleep(REFRESH_SECS)
 
