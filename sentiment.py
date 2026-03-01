@@ -1,15 +1,3 @@
-import subprocess, sys
-
-def install_deps():
-    for dep in ["transformers", "torch", "vaderSentiment"]:
-        try:
-            __import__(dep.replace("-","_"))
-        except ImportError:
-            print(f"📦 Installing {dep} (this may take a while)...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", dep, "-q"])
-
-install_deps()
-
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import threading
 
