@@ -9,7 +9,7 @@ def install_deps():
 
 install_deps()
 
-from flask import Flask, jsonify, render_template_string, redirect
+from flask import Flask, jsonify, Response, redirect
 import requests, time, threading
 from datetime import datetime
 from sentiment import analyze_posts, summarize, _pipeline, USE_BERT
@@ -1001,23 +1001,19 @@ def build_page(template, active, **kwargs):
 #  ROUTES
 # ═══════════════════════════════════════════════════════════
 @app.route("/")
-def dashboard(): return render_template_string(build_page(DASHBOARD_HTML, 'd'))
+def dashboard(): return Response(build_page(DASHBOARD_HTML, 'd'), mimetype='text/html')
 
 @app.route("/coins")
-def coins_page(): return render_template_string(build_page(COINS_HTML, 'co'))
+def coins_page(): return Response(build_page(COINS_HTML, 'co'), mimetype='text/html')
 
 @app.route("/predict")
-def predict_page(): return render_template_string(build_page(PREDICT_HTML, 'pr'))
+def predict_page(): return Response(build_page(PREDICT_HTML, 'pr'), mimetype='text/html')
 
 @app.route("/posts")
-def posts(): return render_template_string(build_page(POSTS_HTML, 'p'))
+def posts(): return Response(build_page(POSTS_HTML, 'p'), mimetype='text/html')
 
 @app.route("/about")
-def about(): return render_template_string(build_page(ABOUT_HTML, 'a', cards=ABOUT_CARDS, tech=TECH_CHIPS))
-
-@app.route("/api/sentiment")
-def api_sentiment():
-    return jsonify({"loading": cache["loading"], "last_updated": cache["last_updated"], "data": cache["data"]})
+def about(): return Response(build_page(ABOUT_HTML, 'a', cards=ABOUT_CARDS, tech=TECH_CHIPS), mimetype='text/html')
 
 @app.route("/api/refresh", methods=["POST"])
 def api_refresh():
