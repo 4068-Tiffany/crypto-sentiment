@@ -133,7 +133,7 @@ def bg_loop():
 #  SHARED CSS
 # ═══════════════════════════════════════════
 SHARED_CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@400;600;700&display=swap');
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
@@ -356,218 +356,506 @@ DASHBOARD_HTML = """<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crypto Pulse — Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>{css}
-.coin-hero{
-  border-radius:20px;padding:28px;position:relative;overflow:hidden;
-  background:var(--surface);border:1px solid var(--border2);
-  transition:transform 0.25s,box-shadow 0.25s;cursor:default;
+<style>
+{css}
+
+/* ── CYBERPUNK DASHBOARD OVERRIDES ───────────────────── */
+:root {
+  --neon-cyan:   #00f5ff;
+  --neon-pink:   #ff2d78;
+  --neon-green:  #00ff9f;
+  --neon-yellow: #ffe600;
+  --neon-purple: #bf5fff;
+  --panel-bg:    rgba(8,12,24,0.85);
+  --panel-border:rgba(0,245,255,0.12);
 }
-.coin-hero:hover{transform:translateY(-4px)}
-.coin-hero::before{content:'';position:absolute;inset:0;opacity:0.06;pointer-events:none}
-.coin-hero .glow{position:absolute;width:200px;height:200px;border-radius:50%;filter:blur(80px);opacity:0.15;top:-40px;right:-40px;pointer-events:none}
-.stat-row{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
-.big-price{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;letter-spacing:-1px;line-height:1}
-.sent-bar-track{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:16px}
-.sent-bar-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1)}
-.market-stat{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px}
-.market-stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+
+.cp-grid-bg {
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+  background-size:48px 48px;
+}
+
+.cp-scanline {
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);
+}
+
+.cp-glow-orb {
+  position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;
+  animation:orbDrift 16s ease-in-out infinite;
+}
+@keyframes orbDrift{0%,100%{transform:translate(0,0)}33%{transform:translate(30px,-40px)}66%{transform:translate(-20px,30px)}}
+
+/* HEADER BAND */
+.cp-header {
+  position:relative;z-index:1;
+  padding:32px 40px 0;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:28px;
+}
+.cp-title-block {}
+.cp-eyebrow {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.6rem;letter-spacing:4px;
+  color:var(--neon-cyan);opacity:0.7;
+  margin-bottom:6px;text-transform:uppercase;
+}
+.cp-title {
+  font-family:'Rajdhani',sans-serif;
+  font-size:2.6rem;font-weight:700;line-height:1;
+  letter-spacing:2px;color:#fff;
+  text-shadow:0 0 40px rgba(0,245,255,0.3);
+}
+.cp-title em {
+  font-style:normal;
+  color:var(--neon-cyan);
+  text-shadow:0 0 20px var(--neon-cyan),0 0 60px rgba(0,245,255,0.4);
+}
+.cp-timestamp {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.62rem;letter-spacing:2px;
+  color:rgba(0,245,255,0.4);
+  text-align:right;padding-bottom:6px;
+}
+
+/* STAT TICKER ROW */
+.cp-ticker {
+  display:flex;gap:2px;
+  background:rgba(0,245,255,0.04);
+  border-top:1px solid var(--neon-cyan);
+  border-bottom:1px solid rgba(0,245,255,0.15);
+  padding:10px 40px;
+  position:relative;z-index:1;
+  margin-bottom:28px;
+  overflow:hidden;
+}
+.cp-ticker::before {
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--neon-cyan);
+  box-shadow:0 0 12px var(--neon-cyan),0 0 30px var(--neon-cyan);
+}
+.cp-tick {
+  display:flex;align-items:center;gap:20px;
+  flex:1;padding:0 20px;
+  border-right:1px solid rgba(0,245,255,0.08);
+}
+.cp-tick:last-child{border-right:none}
+.cp-tick-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.55rem;letter-spacing:3px;
+  color:rgba(0,245,255,0.4);text-transform:uppercase;
+  white-space:nowrap;
+}
+.cp-tick-val {
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.5rem;font-weight:700;letter-spacing:1px;
+  white-space:nowrap;
+}
+
+/* COIN CARDS */
+.cp-coin {
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-radius:4px;
+  padding:22px 24px;
+  position:relative;overflow:hidden;
+  transition:transform 0.2s,box-shadow 0.2s;
+  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);
+}
+.cp-coin:hover {
+  transform:translateY(-4px);
+}
+.cp-coin::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--coin-color,var(--neon-cyan)),transparent);
+}
+.cp-coin::after {
+  content:'';position:absolute;
+  top:0;right:0;width:16px;height:16px;
+  background:linear-gradient(225deg,var(--coin-color,var(--neon-cyan)) 50%,transparent 50%);
+  opacity:0.6;
+}
+.cp-coin-glow {
+  position:absolute;top:-20px;right:-20px;
+  width:120px;height:120px;border-radius:50%;
+  filter:blur(50px);opacity:0.12;pointer-events:none;
+}
+
+.cp-coin-header {
+  display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;
+}
+.cp-coin-symbol {
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.5rem;font-weight:700;letter-spacing:2px;
+  line-height:1;
+}
+.cp-coin-name {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.55rem;letter-spacing:2px;
+  color:rgba(255,255,255,0.3);margin-top:3px;text-transform:uppercase;
+}
+.cp-coin-price {
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.2rem;font-weight:700;letter-spacing:-0.5px;
+  text-align:right;line-height:1;
+}
+.cp-coin-change {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.65rem;font-weight:700;
+  margin-top:4px;text-align:right;
+}
+
+.cp-sent-badge {
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.6rem;font-weight:700;letter-spacing:2px;
+  padding:3px 10px;border-radius:2px;
+  border:1px solid;margin-bottom:14px;
+}
+
+.cp-bar-wrap {margin-bottom:14px}
+.cp-bar-labels {
+  display:flex;justify-content:space-between;margin-bottom:5px;
+}
+.cp-bar-lbl {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.5rem;letter-spacing:2px;color:rgba(255,255,255,0.25);
+}
+.cp-bar-track {
+  height:3px;background:rgba(255,255,255,0.06);
+  border-radius:0;overflow:visible;position:relative;
+}
+.cp-bar-fill {
+  height:100%;border-radius:0;
+  transition:width 1.2s cubic-bezier(0.4,0,0.2,1);
+  position:relative;
+}
+.cp-bar-fill::after {
+  content:'';position:absolute;right:-1px;top:-3px;
+  width:8px;height:8px;border-radius:50%;
+  background:inherit;
+  box-shadow:0 0 8px currentColor;
+}
+
+.cp-mini-grid {
+  display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+  margin-bottom:12px;
+}
+.cp-mini-stat {
+  padding:7px 6px;text-align:center;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:2px;
+  background:rgba(255,255,255,0.02);
+}
+.cp-mini-val {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.85rem;font-weight:700;line-height:1;
+}
+.cp-mini-lbl {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.45rem;letter-spacing:2px;
+  color:rgba(255,255,255,0.25);margin-top:3px;
+  text-transform:uppercase;
+}
+
+.cp-pred {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:2px;
+  margin-top:2px;
+}
+.cp-pred-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.5rem;letter-spacing:3px;
+  color:rgba(255,255,255,0.25);text-transform:uppercase;
+}
+.cp-pred-dir {
+  font-family:'Rajdhani',sans-serif;
+  font-size:1rem;font-weight:700;letter-spacing:2px;
+  display:flex;align-items:center;gap:6px;
+}
+.cp-pred-conf {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.55rem;color:rgba(255,255,255,0.3);
+}
+
+/* BOTTOM PANELS */
+.cp-panel {
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-radius:4px;padding:24px;
+  position:relative;overflow:hidden;
+}
+.cp-panel::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--neon-cyan),transparent);
+}
+.cp-panel-title {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.58rem;letter-spacing:4px;
+  color:var(--neon-cyan);opacity:0.6;
+  text-transform:uppercase;margin-bottom:18px;
+  display:flex;align-items:center;gap:10px;
+}
+.cp-panel-title::after{content:'';flex:1;height:1px;background:rgba(0,245,255,0.1)}
+
+.cp-post {
+  display:flex;gap:12px;padding:10px 12px;
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:2px;margin-bottom:6px;
+  background:rgba(255,255,255,0.02);
+  transition:border-color 0.2s,background 0.2s;
+}
+.cp-post:hover{border-color:rgba(0,245,255,0.2);background:rgba(0,245,255,0.03)}
+.cp-post-badge {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.5rem;letter-spacing:1px;
+  padding:2px 7px;border-radius:2px;
+  white-space:nowrap;align-self:flex-start;margin-top:2px;border:1px solid;
+}
+.cp-post-title {font-size:0.8rem;line-height:1.5;margin-bottom:4px}
+.cp-post-meta {font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:rgba(255,255,255,0.25)}
+
+@keyframes cpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.cp-anim{animation:cpFadeUp 0.5s ease both}
+
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap');
 </style>
 </head><body>
-{nav}
-<div class="page">
 
-  <!-- TOP STATS ROW -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:32px" class="anim">
-    <div class="market-stat">
-      <div class="market-stat-icon" style="background:rgba(247,147,26,0.15)">📊</div>
-      <div><div style="font-size:0.7rem;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Total Posts</div><div id="statTotal" class="mono" style="font-size:1.4rem;font-weight:700;color:var(--text);margin-top:2px">—</div></div>
+<!-- BG LAYERS -->
+<div class="cp-grid-bg"></div>
+<div class="cp-scanline"></div>
+<div class="cp-glow-orb" style="width:600px;height:600px;background:rgba(0,245,255,0.06);top:-100px;left:-100px;animation-delay:0s"></div>
+<div class="cp-glow-orb" style="width:500px;height:500px;background:rgba(255,45,120,0.05);bottom:-100px;right:-100px;animation-delay:-8s"></div>
+<div class="cp-glow-orb" style="width:400px;height:400px;background:rgba(0,255,159,0.04);top:50%;left:50%;animation-delay:-4s"></div>
+
+{nav}
+
+<div style="position:relative;z-index:1">
+
+  <!-- HEADER -->
+  <div class="cp-header cp-anim">
+    <div class="cp-title-block">
+      <div class="cp-eyebrow">◈ LIVE MARKET INTELLIGENCE</div>
+      <div class="cp-title">CRYPTO <em>PULSE</em></div>
     </div>
-    <div class="market-stat">
-      <div class="market-stat-icon" style="background:rgba(34,197,94,0.15)">🟢</div>
-      <div><div style="font-size:0.7rem;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Avg Bullish</div><div id="statBull" class="mono" style="font-size:1.4rem;font-weight:700;color:var(--bull);margin-top:2px">—</div></div>
-    </div>
-    <div class="market-stat">
-      <div class="market-stat-icon" style="background:rgba(239,68,68,0.15)">🔴</div>
-      <div><div style="font-size:0.7rem;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Avg Bearish</div><div id="statBear" class="mono" style="font-size:1.4rem;font-weight:700;color:var(--bear);margin-top:2px">—</div></div>
-    </div>
-    <div class="market-stat">
-      <div class="market-stat-icon" style="background:rgba(153,69,255,0.15)">🔮</div>
-      <div><div style="font-size:0.7rem;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Predictions</div><div id="statPreds" class="mono" style="font-size:1.4rem;font-weight:700;color:#9945FF;margin-top:2px">—</div></div>
-    </div>
-    <div class="market-stat">
-      <div class="market-stat-icon" style="background:rgba(255,255,255,0.06)">🕐</div>
-      <div><div style="font-size:0.7rem;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Last Updated</div><div id="statTime" class="mono" style="font-size:0.75rem;font-weight:600;color:var(--text);margin-top:4px">—</div></div>
+    <div class="cp-timestamp">
+      <div id="liveTime" style="font-size:0.7rem;color:var(--neon-cyan);margin-bottom:4px"></div>
+      <div id="lastUpdated" style="color:rgba(0,245,255,0.35)">LAST UPDATED: —</div>
     </div>
   </div>
 
-  <!-- COIN GRID -->
-  <div class="label anim" style="animation-delay:0.05s">5 Coins · Live Sentiment</div>
-  <div id="coinGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-bottom:32px"></div>
+  <!-- TICKER STRIP -->
+  <div class="cp-ticker cp-anim" style="animation-delay:0.05s" id="tickerRow">
+    <div class="cp-tick"><div class="cp-tick-label">Total Posts</div><div class="cp-tick-val" id="tkTotal" style="color:var(--neon-cyan)">—</div></div>
+    <div class="cp-tick"><div class="cp-tick-label">Avg Bullish</div><div class="cp-tick-val" id="tkBull" style="color:var(--neon-green)">—</div></div>
+    <div class="cp-tick"><div class="cp-tick-label">Avg Bearish</div><div class="cp-tick-val" id="tkBear" style="color:var(--neon-pink)">—</div></div>
+    <div class="cp-tick"><div class="cp-tick-label">UP Signals</div><div class="cp-tick-val" id="tkPred" style="color:var(--neon-purple)">—</div></div>
+    <div class="cp-tick"><div class="cp-tick-label">BTC Price</div><div class="cp-tick-val" id="tkBtc" style="color:#F7931A">—</div></div>
+  </div>
 
-  <!-- BOTTOM ROW -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="anim" style="animation-delay:0.2s">
-    <div class="card" style="padding:28px">
-      <div class="label" style="margin-bottom:20px">Sentiment Distribution</div>
+  <!-- COIN GRID -->
+  <div style="padding:0 40px 28px">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:4px;color:rgba(0,245,255,0.4);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+      <span>◈ SENTIMENT GRID</span>
+      <span style="flex:1;height:1px;background:rgba(0,245,255,0.1);display:block"></span>
+      <span id="gridStatus" style="color:rgba(0,245,255,0.3)">5 COINS TRACKED</span>
+    </div>
+    <div id="coinGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px"></div>
+  </div>
+
+  <!-- BOTTOM PANELS -->
+  <div style="padding:0 40px 60px;display:grid;grid-template-columns:1fr 1.2fr;gap:14px" class="cp-anim" style="animation-delay:0.25s">
+
+    <!-- CHART -->
+    <div class="cp-panel">
+      <div class="cp-panel-title">Sentiment Distribution</div>
       <div style="position:relative;height:260px"><canvas id="radarChart"></canvas></div>
     </div>
-    <div class="card" style="padding:28px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div class="label" style="margin-bottom:0">Latest Posts</div>
-        <a href="/posts" style="font-size:0.75rem;font-weight:600;color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:6px;border:1px solid var(--border2);transition:all 0.2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--muted)'">View all →</a>
+
+    <!-- POSTS -->
+    <div class="cp-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div class="cp-panel-title" style="margin-bottom:0">Latest Intel</div>
+        <a href="/posts" style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:var(--neon-cyan);opacity:0.6;text-decoration:none;border:1px solid rgba(0,245,255,0.2);padding:4px 10px;border-radius:2px;transition:all 0.2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">VIEW ALL →</a>
       </div>
-      <div id="previewList" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto"></div>
+      <div id="postList" style="display:flex;flex-direction:column;max-height:300px;overflow-y:auto"></div>
     </div>
+
   </div>
 </div>
 
 <script>
 let radarChart=null;
-
 const COIN_ORDER=['bitcoin','ethereum','solana','tether','binancecoin'];
 const COIN_COLORS={'bitcoin':'#F7931A','ethereum':'#627EEA','solana':'#9945FF','tether':'#26A17B','binancecoin':'#F3BA2F'};
+const SENT_COLORS={BULLISH:'#00ff9f',BEARISH:'#ff2d78',NEUTRAL:'#ffe600'};
 
-function fmt(price){
-  if(!price)return'—';
-  if(price>=1000)return'$'+price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if(price>=1)return'$'+price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
-  return'$'+price.toFixed(4);
+function fmt(p){
+  if(!p)return'—';
+  if(p>=1000)return'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
 }
 
-function sentClass(s){return s==='BULLISH'?'pill-bull':s==='BEARISH'?'pill-bear':'pill-neut'}
-function sentEmoji(s){return s==='BULLISH'?'▲':s==='BEARISH'?'▼':'–'}
+// Live clock
+function updateClock(){
+  const now=new Date();
+  document.getElementById('liveTime').textContent=now.toUTCString().replace(' GMT','  UTC');
+}
+setInterval(updateClock,1000);updateClock();
 
 function renderCoins(coins){
   const grid=document.getElementById('coinGrid');
   grid.innerHTML='';
-  let totalPosts=0,bullSum=0,bearSum=0,upPreds=0;
-  COIN_ORDER.forEach((k,i)=>{
+  let totalPosts=0,bullSum=0,bearSum=0,upCount=0;
+
+  COIN_ORDER.forEach(function(k,i){
     const c=coins[k];if(!c)return;
-    const color=COIN_COLORS[k];
+    const color=COIN_COLORS[k]||'#00f5ff';
     const up=(c.change24||0)>=0;
     const pct=c.percentages||{};
-    totalPosts+=c.total||0;
-    bullSum+=pct.BULLISH||0;
-    bearSum+=pct.BEARISH||0;
-    if(c.prediction&&c.prediction.direction==='UP')upPreds++;
+    const pred=c.prediction;
+    totalPosts+=(c.total||0);
+    bullSum+=(pct.BULLISH||0);
+    bearSum+=(pct.BEARISH||0);
+    if(pred&&pred.direction==='UP')upCount++;
+
+    const sc=SENT_COLORS[c.overall]||'#fff';
+    const sentBorderColor=c.overall==='BULLISH'?'rgba(0,255,159,0.3)':c.overall==='BEARISH'?'rgba(255,45,120,0.3)':'rgba(255,230,0,0.3)';
+    const sentBgColor=c.overall==='BULLISH'?'rgba(0,255,159,0.08)':c.overall==='BEARISH'?'rgba(255,45,120,0.08)':'rgba(255,230,0,0.08)';
+
+    let predHtml='';
+    if(pred){
+      const dc=pred.direction==='UP'?'#00ff9f':pred.direction==='DOWN'?'#ff2d78':'#ffe600';
+      const de=pred.direction==='UP'?'▲ UP':pred.direction==='DOWN'?'▼ DOWN':'→ FLAT';
+      predHtml='<div class="cp-pred">'
+        +'<span class="cp-pred-label">24H FORECAST</span>'
+        +'<span class="cp-pred-dir" style="color:'+dc+'">'+de+'</span>'
+        +'<span class="cp-pred-conf">'+pred.confidence+'% CONF</span>'
+        +'</div>';
+    }
 
     const card=document.createElement('div');
-    card.className='coin-hero anim';
-    card.style.animationDelay=(i*0.06)+'s';
-    card.style.borderColor='rgba('+hexToRgb(color)+',0.2)';
-    card.innerHTML=`
-      <div class="glow" style="background:${color}"></div>
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:42px;height:42px;border-radius:12px;background:rgba(${hexToRgb(color)},0.15);border:1px solid rgba(${hexToRgb(color)},0.3);display:flex;align-items:center;justify-content:center;font-size:1.2rem">${c.emoji}</div>
-          <div>
-            <div style="font-weight:800;font-size:1.1rem;letter-spacing:-0.3px">${c.symbol}</div>
-            <div style="font-size:0.72rem;color:var(--muted);font-weight:500">${c.label}</div>
-          </div>
-        </div>
-        <div class="pill ${sentClass(c.overall)}">${sentEmoji(c.overall)} ${c.overall}</div>
-      </div>
-      <div class="big-price" style="color:${color}">${fmt(c.price)}</div>
-      <div class="stat-row" style="margin-top:8px">
-        <span style="font-size:0.75rem;font-weight:600;color:${up?'var(--bull)':'var(--bear)'}">${up?'▲ +':'▼ '}${c.change24||0}%</span>
-        <span style="font-size:0.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace">${c.total||0} posts</span>
-      </div>
-      <div class="sent-bar-track">
-        <div class="sent-bar-fill" id="bar-${k}" style="width:0%;background:linear-gradient(90deg,${color},${color}aa)"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px">
-        <div style="text-align:center;padding:8px;background:rgba(34,197,94,0.07);border-radius:8px;border:1px solid rgba(34,197,94,0.12)">
-          <div class="mono" style="font-size:0.9rem;font-weight:700;color:var(--bull)">${pct.BULLISH||0}%</div>
-          <div style="font-size:0.55rem;color:var(--muted);margin-top:2px;font-weight:600;letter-spacing:1px">BULL</div>
-        </div>
-        <div style="text-align:center;padding:8px;background:rgba(239,68,68,0.07);border-radius:8px;border:1px solid rgba(239,68,68,0.12)">
-          <div class="mono" style="font-size:0.9rem;font-weight:700;color:var(--bear)">${pct.BEARISH||0}%</div>
-          <div style="font-size:0.55rem;color:var(--muted);margin-top:2px;font-weight:600;letter-spacing:1px">BEAR</div>
-        </div>
-        <div style="text-align:center;padding:8px;background:rgba(234,179,8,0.07);border-radius:8px;border:1px solid rgba(234,179,8,0.12)">
-          <div class="mono" style="font-size:0.9rem;font-weight:700;color:var(--neut)">${pct.NEUTRAL||0}%</div>
-          <div style="font-size:0.55rem;color:var(--muted);margin-top:2px;font-weight:600;letter-spacing:1px">NEUT</div>
-        </div>
-      </div>
-      ${c.prediction?`
-      <div style="margin-top:14px;padding:10px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:0.7rem;color:var(--muted);font-weight:600">24H FORECAST</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:1rem">${{UP:'📈',DOWN:'📉',SIDEWAYS:'➡️'}}[c.prediction.direction]||'➡️'}</span>
-          <span style="font-size:0.75rem;font-weight:700;color:${{UP:'var(--bull)',DOWN:'var(--bear)',SIDEWAYS:'var(--neut)'}}[c.prediction.direction]}">${c.prediction.direction}</span>
-          <span style="font-size:0.65rem;color:var(--muted)">${c.prediction.confidence}%</span>
-        </div>
-      </div>`:''}
-    `;
+    card.className='cp-coin cp-anim';
+    card.style.setProperty('--coin-color', color);
+    card.style.animationDelay=(i*0.07)+'s';
+    card.innerHTML=''
+      +'<div class="cp-coin-glow" style="background:'+color+'"></div>'
+      +'<div class="cp-coin-header">'
+        +'<div>'
+          +'<div class="cp-coin-symbol" style="color:'+color+';text-shadow:0 0 20px '+color+'66">'+c.symbol+'</div>'
+          +'<div class="cp-coin-name">'+c.label+'</div>'
+        +'</div>'
+        +'<div>'
+          +'<div class="cp-coin-price" style="color:'+color+'">'+fmt(c.price)+'</div>'
+          +'<div class="cp-coin-change" style="color:'+(up?'#00ff9f':'#ff2d78')+'">'+(up?'▲ +':'▼ ')+(c.change24||0)+'%</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="cp-sent-badge" style="color:'+sc+';border-color:'+sentBorderColor+';background:'+sentBgColor+'">'+c.overall+'</div>'
+      +'<div class="cp-bar-wrap">'
+        +'<div class="cp-bar-labels"><span class="cp-bar-lbl">BULL '+(pct.BULLISH||0)+'%</span><span class="cp-bar-lbl">BEAR '+(pct.BEARISH||0)+'%</span></div>'
+        +'<div class="cp-bar-track">'
+          +'<div id="cpbar-'+k+'" class="cp-bar-fill" style="width:0%;background:linear-gradient(90deg,'+color+'88,'+color+');box-shadow:0 0 8px '+color+'66"></div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="cp-mini-grid">'
+        +'<div class="cp-mini-stat"><div class="cp-mini-val" style="color:#00ff9f">'+(pct.BULLISH||0)+'%</div><div class="cp-mini-lbl">Bull</div></div>'
+        +'<div class="cp-mini-stat"><div class="cp-mini-val" style="color:#ff2d78">'+(pct.BEARISH||0)+'%</div><div class="cp-mini-lbl">Bear</div></div>'
+        +'<div class="cp-mini-stat"><div class="cp-mini-val" style="color:#ffe600">'+(pct.NEUTRAL||0)+'%</div><div class="cp-mini-lbl">Neut</div></div>'
+      +'</div>'
+      +predHtml;
+
     grid.appendChild(card);
-    setTimeout(()=>{
-      const bar=document.getElementById('bar-'+k);
+    setTimeout(function(){
+      const bar=document.getElementById('cpbar-'+k);
       if(bar)bar.style.width=(pct.BULLISH||0)+'%';
-    },300+i*80);
+    },400+i*80);
   });
 
-  // top stats
-  const n=COIN_ORDER.length;
-  document.getElementById('statTotal').textContent=totalPosts.toLocaleString();
-  document.getElementById('statBull').textContent=Math.round(bullSum/n)+'%';
-  document.getElementById('statBear').textContent=Math.round(bearSum/n)+'%';
-  document.getElementById('statPreds').textContent=upPreds+' UP / '+(n-upPreds)+' DOWN';
-}
-
-function hexToRgb(hex){
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return r+','+g+','+b;
+  // ticker
+  const n=COIN_ORDER.filter(function(k){return coins[k]}).length||1;
+  document.getElementById('tkTotal').textContent=totalPosts.toLocaleString();
+  document.getElementById('tkBull').textContent=Math.round(bullSum/n)+'%';
+  document.getElementById('tkBear').textContent=Math.round(bearSum/n)+'%';
+  document.getElementById('tkPred').textContent=upCount+' / '+n;
+  if(coins.bitcoin&&coins.bitcoin.price)
+    document.getElementById('tkBtc').textContent=fmt(coins.bitcoin.price);
 }
 
 function renderRadar(coins){
   const ctx=document.getElementById('radarChart').getContext('2d');
   if(radarChart)radarChart.destroy();
-  const labels=COIN_ORDER.map(k=>coins[k]?coins[k].symbol:'');
-  const bull=COIN_ORDER.map(k=>coins[k]?(coins[k].percentages||{}).BULLISH||0:0);
-  const bear=COIN_ORDER.map(k=>coins[k]?(coins[k].percentages||{}).BEARISH||0:0);
+  const labels=COIN_ORDER.map(function(k){return coins[k]?coins[k].symbol:''});
+  const bull=COIN_ORDER.map(function(k){return coins[k]?(coins[k].percentages||{}).BULLISH||0:0});
+  const bear=COIN_ORDER.map(function(k){return coins[k]?(coins[k].percentages||{}).BEARISH||0:0});
   radarChart=new Chart(ctx,{
     type:'radar',
-    data:{labels,datasets:[
-      {label:'Bullish %',data:bull,backgroundColor:'rgba(34,197,94,0.15)',borderColor:'#22c55e',borderWidth:2,pointBackgroundColor:'#22c55e',pointRadius:4},
-      {label:'Bearish %',data:bear,backgroundColor:'rgba(239,68,68,0.12)',borderColor:'#ef4444',borderWidth:2,pointBackgroundColor:'#ef4444',pointRadius:4},
+    data:{labels:labels,datasets:[
+      {label:'Bullish %',data:bull,backgroundColor:'rgba(0,255,159,0.1)',borderColor:'#00ff9f',borderWidth:2,pointBackgroundColor:'#00ff9f',pointRadius:4,pointBorderColor:'#00ff9f'},
+      {label:'Bearish %',data:bear,backgroundColor:'rgba(255,45,120,0.08)',borderColor:'#ff2d78',borderWidth:2,pointBackgroundColor:'#ff2d78',pointRadius:4,pointBorderColor:'#ff2d78'},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,scales:{r:{ticks:{color:'#555568',font:{family:'JetBrains Mono',size:9},backdropColor:'transparent',stepSize:25},grid:{color:'rgba(255,255,255,0.05)'},angleLines:{color:'rgba(255,255,255,0.05)'},pointLabels:{color:'#e8e8f0',font:{family:'Outfit',size:12,weight:'600'}}}},plugins:{legend:{labels:{color:'#555568',font:{family:'Outfit',size:11},usePointStyle:true}},tooltip:{backgroundColor:'rgba(22,22,31,0.95)',borderColor:'rgba(255,255,255,0.1)',borderWidth:1}}}
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{
+        ticks:{color:'rgba(0,245,255,0.3)',font:{family:'JetBrains Mono',size:9},backdropColor:'transparent',stepSize:25},
+        grid:{color:'rgba(0,245,255,0.07)'},
+        angleLines:{color:'rgba(0,245,255,0.07)'},
+        pointLabels:{color:'rgba(255,255,255,0.6)',font:{family:'Rajdhani',size:13,weight:'600'}}
+      }},
+      plugins:{
+        legend:{labels:{color:'rgba(255,255,255,0.3)',font:{family:'JetBrains Mono',size:10},usePointStyle:true}},
+        tooltip:{backgroundColor:'rgba(4,8,20,0.95)',borderColor:'rgba(0,245,255,0.2)',borderWidth:1,titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:10}}
+      }
+    }
   });
 }
 
 function renderPosts(posts){
-  const list=document.getElementById('previewList');
+  const list=document.getElementById('postList');
   list.innerHTML='';
-  (posts||[]).slice(0,7).forEach((p,i)=>{
-    const sc=p.compound>0?'var(--bull)':p.compound<0?'var(--bear)':'var(--neut)';
-    const bgMap={BULLISH:'rgba(34,197,94,0.08)',BEARISH:'rgba(239,68,68,0.08)',NEUTRAL:'rgba(234,179,8,0.08)'};
-    const clrMap={BULLISH:'var(--bull)',BEARISH:'var(--bear)',NEUTRAL:'var(--neut)'};
+  (posts||[]).slice(0,8).forEach(function(p,i){
+    const sc=p.compound>0?'#00ff9f':p.compound<0?'#ff2d78':'#ffe600';
+    const bg={BULLISH:'rgba(0,255,159,0.08)',BEARISH:'rgba(255,45,120,0.08)',NEUTRAL:'rgba(255,230,0,0.08)'}[p.label]||'';
+    const bc={BULLISH:'rgba(0,255,159,0.25)',BEARISH:'rgba(255,45,120,0.25)',NEUTRAL:'rgba(255,230,0,0.25)'}[p.label]||'';
+    const tc={BULLISH:'#00ff9f',BEARISH:'#ff2d78',NEUTRAL:'#ffe600'}[p.label]||'#fff';
     const el=document.createElement('div');
-    el.style.cssText='display:flex;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);animation:fadeUp 0.3s ease '+(i*0.04)+'s both;transition:border-color 0.2s';
-    el.onmouseover=()=>el.style.borderColor='rgba(255,255,255,0.15)';
-    el.onmouseout=()=>el.style.borderColor='var(--border)';
-    el.innerHTML='<span style="font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:5px;background:'+bgMap[p.label]+';color:'+clrMap[p.label]+';white-space:nowrap;align-self:flex-start;margin-top:2px;letter-spacing:0.5px">'+p.label+'</span><div style="flex:1;min-width:0"><div style="font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">'+p.title+'</div><div style="display:flex;gap:8px;margin-top:3px"><span style="font-size:0.65rem;color:var(--muted)">'+p.source+'</span><span style="font-size:0.65rem;font-family:JetBrains Mono,monospace;color:'+sc+'">'+(p.compound>0?'+':'')+p.compound.toFixed(3)+'</span></div></div>';
+    el.className='cp-post';
+    el.style.animationDelay=(i*0.04)+'s';
+    el.innerHTML=''
+      +'<span class="cp-post-badge" style="background:'+bg+';color:'+tc+';border-color:'+bc+'">'+p.label+'</span>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div class="cp-post-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.title+'</div>'
+        +'<div class="cp-post-meta">'
+          +'<span>'+p.source+'</span>'
+          +'<span style="margin-left:12px;color:'+sc+'">'+(p.compound>0?'+':'')+p.compound.toFixed(3)+'</span>'
+        +'</div>'
+      +'</div>';
     list.appendChild(el);
   });
 }
 
-async function load(showLoader=false){
+async function load(showLoader){
   if(showLoader)document.getElementById('loader').classList.remove('gone');
   document.getElementById('refreshBtn').disabled=true;
   try{
     let d=await(await fetch('/api/sentiment')).json();
-    let attempts=0;while(d.loading&&attempts<15){await new Promise(r=>setTimeout(r,2000));d=await(await fetch('/api/sentiment')).json();attempts++;}
+    while(d.loading){await new Promise(r=>setTimeout(r,2000));d=await(await fetch('/api/sentiment')).json();}
     if(d.data){
-      if(d.data.coins)renderCoins(d.data.coins);
-      if(d.data.coins)renderRadar(d.data.coins);
+      if(d.data.coins){renderCoins(d.data.coins);renderRadar(d.data.coins);}
       if(d.data.posts)renderPosts(d.data.posts);
-      document.getElementById('statTime').textContent=d.last_updated||'—';
+      document.getElementById('lastUpdated').textContent='LAST UPDATED: '+(d.last_updated||'—');
     }
   }catch(e){console.error(e)}
   document.getElementById('loader').classList.add('gone');
   document.getElementById('refreshBtn').disabled=false;
 }
-async function manualRefresh(){document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{method:'POST'});await load(true)}
-setInterval(()=>load(),300000);
+async function manualRefresh(){document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{method:'POST'});await load(true);}
+setInterval(function(){load(false)},300000);
 load(true);
 </script>
 </body></html>"""
@@ -940,15 +1228,15 @@ ABOUT_HTML = """<!DOCTYPE html><html lang="en"><head>
   <!-- USDT SPECIAL -->
   <div class="about-section anim" style="animation-delay:0.15s">
     <h2><span style="font-size:1.3rem">₮</span> <span style="color:#26A17B">Tether is different</span></h2>
-    <p>USDT is a stablecoin it's not supposed to go up or down in price. So measuring whether people are "bullish" on USDT doesn't make much sense. Instead, Crypto Pulse measures something more useful: <strong>peg health</strong>.</p>
-    <p>For Tether, a Bullish sentiment means the community trusts the peg people are talking about reserves, transparency, and stability. A Bearish sentiment means depeg anxiety is rising discussions of lawsuits, insolvency fears, or FUD are dominating. This gives you an early warning signal before a potential peg event.</p>
+    <p>USDT is a stablecoin — it's not supposed to go up or down in price. So measuring whether people are "bullish" on USDT doesn't make much sense. Instead, Crypto Pulse measures something more useful: <strong>peg health</strong>.</p>
+    <p>For Tether, a Bullish sentiment means the community trusts the peg — people are talking about reserves, transparency, and stability. A Bearish sentiment means depeg anxiety is rising — discussions of lawsuits, insolvency fears, or FUD are dominating. This gives you an early warning signal before a potential peg event.</p>
   </div>
 
   <!-- PREDICTIONS -->
   <div class="about-section anim" style="animation-delay:0.2s">
     <h2><span style="font-size:1.3rem">🔮</span> <span style="color:#627EEA">How predictions are made</span></h2>
-    <p>The 24-hour price forecast combines three signals into a single directional prediction. <strong>Sentiment (50%)</strong>  what Reddit is saying right now. <strong>Momentum (30%)</strong>  whether the price has been moving up or down in the last 24 hours. <strong>Trend (20%)</strong>  the broader 7-day price direction.</p>
-    <p>When all three signals agree, confidence is high. When they point in different directions for example, Reddit is bullish but the price has been dropping  confidence is lower and the prediction is treated with more caution.</p>
+    <p>The 24-hour price forecast combines three signals into a single directional prediction. <strong>Sentiment (50%)</strong> — what Reddit is saying right now. <strong>Momentum (30%)</strong> — whether the price has been moving up or down in the last 24 hours. <strong>Trend (20%)</strong> — the broader 7-day price direction.</p>
+    <p>When all three signals agree, confidence is high. When they point in different directions — for example, Reddit is bullish but the price has been dropping — confidence is lower and the prediction is treated with more caution.</p>
     <p style="color:#eab308;font-size:0.82rem">⚠ These predictions are indicators, not guarantees. Crypto is highly volatile and no model can reliably predict short-term price moves. Always do your own research before making any trading decisions.</p>
   </div>
 
@@ -1031,4 +1319,3 @@ if __name__ == "__main__":
     run_analysis()
     threading.Thread(target=bg_loop, daemon=True).start()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
