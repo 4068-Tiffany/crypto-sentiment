@@ -892,7 +892,7 @@ ABOUT_HTML = """<!DOCTYPE html><html lang="en"><head>
   <!-- HOW SENTIMENT WORKS -->
   <div class="about-section anim" style="animation-delay:0.1s">
     <h2><span style="font-size:1.3rem">🧠</span> <span style="color:#9945FF">How we measure sentiment</span></h2>
-    <p>Each post is scored using <strong>VADER</strong> — a natural language processing model built specifically for social media text. VADER reads each post and assigns it a compound score between <strong>-1</strong> (extremely negative) and <strong>+1</strong> (extremely positive).</p>
+    <p>Each post is scored using <strong>VADER</strong> a natural language processing model built specifically for social media text. VADER reads each post and assigns it a compound score between <strong>-1</strong> (extremely negative) and <strong>+1</strong> (extremely positive).</p>
     <p>But crypto Twitter and Reddit have their own language. Words like <strong>"moon"</strong>, <strong>"hodl"</strong>, and <strong>"ath"</strong> mean very different things in crypto than in everyday English. So on top of VADER, we layer a custom crypto keyword system that understands the community's language — boosting scores for bullish terms and reducing them for bearish ones like <strong>"rug"</strong>, <strong>"liquidation"</strong>, or <strong>"depeg"</strong>.</p>
     <p>A post scoring above <strong>+0.05</strong> is classified as Bullish. Below <strong>-0.05</strong> is Bearish. Everything in between is Neutral. The overall market mood for each coin is determined by averaging the scores of all its recent posts.</p>
   </div>
@@ -900,15 +900,15 @@ ABOUT_HTML = """<!DOCTYPE html><html lang="en"><head>
   <!-- USDT SPECIAL -->
   <div class="about-section anim" style="animation-delay:0.15s">
     <h2><span style="font-size:1.3rem">₮</span> <span style="color:#26A17B">Tether is different</span></h2>
-    <p>USDT is a stablecoin — it's not supposed to go up or down in price. So measuring whether people are "bullish" on USDT doesn't make much sense. Instead, Crypto Pulse measures something more useful: <strong>peg health</strong>.</p>
-    <p>For Tether, a Bullish sentiment means the community trusts the peg — people are talking about reserves, transparency, and stability. A Bearish sentiment means depeg anxiety is rising — discussions of lawsuits, insolvency fears, or FUD are dominating. This gives you an early warning signal before a potential peg event.</p>
+    <p>USDT is a stablecoin it's not supposed to go up or down in price. So measuring whether people are "bullish" on USDT doesn't make much sense. Instead, Crypto Pulse measures something more useful: <strong>peg health</strong>.</p>
+    <p>For Tether, a Bullish sentiment means the community trusts the peg people are talking about reserves, transparency, and stability. A Bearish sentiment means depeg anxiety is rising discussions of lawsuits, insolvency fears, or FUD are dominating. This gives you an early warning signal before a potential peg event.</p>
   </div>
 
   <!-- PREDICTIONS -->
   <div class="about-section anim" style="animation-delay:0.2s">
     <h2><span style="font-size:1.3rem">🔮</span> <span style="color:#627EEA">How predictions are made</span></h2>
-    <p>The 24-hour price forecast combines three signals into a single directional prediction. <strong>Sentiment (50%)</strong> — what Reddit is saying right now. <strong>Momentum (30%)</strong> — whether the price has been moving up or down in the last 24 hours. <strong>Trend (20%)</strong> — the broader 7-day price direction.</p>
-    <p>When all three signals agree, confidence is high. When they point in different directions — for example, Reddit is bullish but the price has been dropping — confidence is lower and the prediction is treated with more caution.</p>
+    <p>The 24-hour price forecast combines three signals into a single directional prediction. <strong>Sentiment (50%)</strong> what Reddit is saying right now. <strong>Momentum (30%)</strong> whether the price has been moving up or down in the last 24 hours. <strong>Trend (20%)</strong> the broader 7-day price direction.</p>
+    <p>When all three signals agree, confidence is high. When they point in different directions for example, Reddit is bullish but the price has been dropping  confidence is lower and the prediction is treated with more caution.</p>
     <p style="color:#eab308;font-size:0.82rem">⚠ These predictions are indicators, not guarantees. Crypto is highly volatile and no model can reliably predict short-term price moves. Always do your own research before making any trading decisions.</p>
   </div>
 
