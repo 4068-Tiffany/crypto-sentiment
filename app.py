@@ -580,8 +580,8 @@ COINS_HTML = """<!DOCTYPE html><html lang="en"><head>
 <title>Crypto Pulse — Coins</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>{css}
-.coin-detail{{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;position:relative;overflow:hidden;transition:transform 0.25s}}
-.coin-detail:hover{{transform:translateY(-3px)}}
+.coin-card{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;position:relative;overflow:hidden;transition:transform 0.25s}
+.coin-card:hover{transform:translateY(-3px)}
 </style>
 </head><body>
 {nav}
@@ -593,72 +593,88 @@ COINS_HTML = """<!DOCTYPE html><html lang="en"><head>
   <div id="coinsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px"></div>
 </div>
 <script>
-const COIN_COLORS={{'bitcoin':'#F7931A','ethereum':'#627EEA','solana':'#9945FF','tether':'#26A17B','binancecoin':'#F3BA2F'}};
-function hexToRgb(hex){{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return r+','+g+','+b}}
-function fmt(p){{if(!p)return'—';if(p>=1000)return'$'+p.toLocaleString('en-US',{{minimumFractionDigits:2,maximumFractionDigits:2}});return'$'+p.toLocaleString('en-US',{{minimumFractionDigits:2,maximumFractionDigits:4}})}}
+const COIN_COLORS={'bitcoin':'#F7931A','ethereum':'#627EEA','solana':'#9945FF','tether':'#26A17B','binancecoin':'#F3BA2F'};
+const COIN_ORDER=['bitcoin','ethereum','solana','tether','binancecoin'];
+function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return r+','+g+','+b}
+function fmt(p){if(!p)return'—';if(p>=1000)return'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});return'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4})}
+function sentBg(s){return{BULLISH:'rgba(34,197,94,0.1)',BEARISH:'rgba(239,68,68,0.1)',NEUTRAL:'rgba(234,179,8,0.1)'}[s]||''}
+function sentClr(s){return{BULLISH:'#22c55e',BEARISH:'#ef4444',NEUTRAL:'#eab308'}[s]||'#888'}
+function dirEmoji(d){return{UP:'📈',DOWN:'📉',SIDEWAYS:'➡️'}[d]||'➡️'}
+function dirClr(d){return{UP:'#22c55e',DOWN:'#ef4444',SIDEWAYS:'#eab308'}[d]||'#888'}
 
-async function load(){{
-  try{{
-    let d=await(await fetch('/api/sentiment')).json();
-    if(d.data&&d.data.coins){{render(d.data.coins);document.getElementById('loader').classList.add('gone');return;}}
-    document.getElementById('loader').classList.remove('gone');
-    let attempts=0;while(d.loading&&attempts<15){{await new Promise(r=>setTimeout(r,2000));d=await(await fetch(`/api/sentiment`)).json();attempts++;}}
-    if(d.data&&d.data.coins)render(d.data.coins);
-  }}catch(e){{console.error(e)}}
-  document.getElementById('loader').classList.add('gone');
-}}
-
-function render(coins){{
+function render(coins){
   const grid=document.getElementById('coinsGrid');
   grid.innerHTML='';
-  Object.entries(coins).forEach(([k,c],i)=>{{
+  COIN_ORDER.forEach(function(k,i){
+    const c=coins[k];
+    if(!c)return;
     const color=COIN_COLORS[k]||'#888';
     const rgb=hexToRgb(color);
     const up=(c.change24||0)>=0;
-    const pct=c.percentages||{{}};
+    const pct=c.percentages||{};
     const pred=c.prediction;
-    const sentBg={{BULLISH:'rgba(34,197,94,0.1)',BEARISH:'rgba(239,68,68,0.1)',NEUTRAL:'rgba(234,179,8,0.1)'}};
-    const sentClr={{BULLISH:'#22c55e',BEARISH:'#ef4444',NEUTRAL:'#eab308'}};
     const card=document.createElement('div');
-    card.className='coin-detail anim';
-    card.style.cssText+='animation-delay:'+(i*0.07)+'s;border-color:rgba('+rgb+',0.2)';
+    card.className='coin-card anim';
     card.id='coin-'+k;
-    card.innerHTML=`
-      <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:${color};filter:blur(60px);opacity:0.1;pointer-events:none"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:48px;height:48px;border-radius:14px;background:rgba(${rgb},0.15);border:1px solid rgba(${rgb},0.3);display:flex;align-items:center;justify-content:center;font-size:1.4rem">${{c.emoji}}</div>
-          <div>
-            <div style="font-weight:800;font-size:1.2rem;letter-spacing:-0.3px">${{c.symbol}}</div>
-            <div style="font-size:0.72rem;color:var(--muted);font-weight:500">${{c.label}}</div>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-family:JetBrains Mono,monospace;font-size:1.1rem;font-weight:700;color:${color}">${{fmt(c.price)}}</div>
-          <div style="font-size:0.72rem;font-weight:600;color:${{up?'#22c55e':'#ef4444'}}">${{up?'▲ +':'▼ '}}{{}}{c.change24||0}%</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <span style="font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:20px;background:${{sentBg[c.overall]}};color:${{sentClr[c.overall]}};border:1px solid ${{sentClr[c.overall]}}33">${{c.overall}}</span>
-        <span style="font-size:0.7rem;color:var(--muted);font-family:JetBrains Mono,monospace">${{c.total||0}} posts · score ${{c.avg_score||0}}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
-        ${{[['BULLISH','#22c55e','34,197,94'],['BEARISH','#ef4444','239,68,68'],['NEUTRAL','#eab308','234,179,8']].map(([lbl,clr,rgb2])=>`<div style="text-align:center;padding:10px;background:rgba(${{rgb2}},0.07);border-radius:10px;border:1px solid rgba(${{rgb2}},0.15)"><div style="font-family:JetBrains Mono,monospace;font-size:1.1rem;font-weight:700;color:${{clr}}">${{(pct[lbl]||0)}}%</div><div style="font-size:0.55rem;color:var(--muted);margin-top:3px;font-weight:600;letter-spacing:1px">${{lbl}}</div></div>`).join('')}}
-      </div>
-      <div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:14px">
-        <div style="display:flex;height:100%">
-          <div style="width:${{pct.BULLISH||0}}%;background:#22c55e;transition:width 1s ease"></div>
-          <div style="width:${{pct.BEARISH||0}}%;background:#ef4444;transition:width 1s ease"></div>
-          <div style="width:${{pct.NEUTRAL||0}}%;background:#eab308;transition:width 1s ease"></div>
-        </div>
-      </div>
-      ${{pred?`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)"><span style="font-size:0.7rem;color:var(--muted);font-weight:600">24H FORECAST</span><div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.1rem">${{{{UP:'📈',DOWN:'📉',SIDEWAYS:'➡️'}}[pred.direction]||'➡️'}}</span><span style="font-weight:700;color:${{{{UP:'#22c55e',DOWN:'#ef4444',SIDEWAYS:'#eab308'}}[pred.direction]}}">${{pred.direction}}</span><span style="font-size:0.7rem;color:var(--muted);font-family:JetBrains Mono,monospace">${{pred.confidence}}% conf</span></div></div>`:'<div style="text-align:center;font-size:0.7rem;color:var(--muted);padding:8px">No prediction data</div>'}}
-    `;
+    card.style.animationDelay=(i*0.07)+'s';
+    card.style.borderColor='rgba('+rgb+',0.2)';
+    let predHtml='';
+    if(pred){
+      predHtml='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-top:14px">'
+        +'<span style="font-size:0.7rem;color:var(--muted);font-weight:600">24H FORECAST</span>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="font-size:1.1rem">'+dirEmoji(pred.direction)+'</span>'
+        +'<span style="font-weight:700;color:'+dirClr(pred.direction)+'">'+pred.direction+'</span>'
+        +'<span style="font-size:0.7rem;color:var(--muted);font-family:JetBrains Mono,monospace">'+pred.confidence+'% conf</span>'
+        +'</div></div>';
+    }
+    card.innerHTML=''
+      +'<div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:'+color+';filter:blur(60px);opacity:0.1;pointer-events:none"></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
+        +'<div style="display:flex;align-items:center;gap:12px">'
+          +'<div style="width:48px;height:48px;border-radius:14px;background:rgba('+rgb+',0.15);border:1px solid rgba('+rgb+',0.3);display:flex;align-items:center;justify-content:center;font-size:1.4rem">'+c.emoji+'</div>'
+          +'<div><div style="font-weight:800;font-size:1.2rem;letter-spacing:-0.3px">'+c.symbol+'</div>'
+          +'<div style="font-size:0.72rem;color:var(--muted);font-weight:500">'+c.label+'</div></div>'
+        +'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="font-family:JetBrains Mono,monospace;font-size:1.1rem;font-weight:700;color:'+color+'">'+fmt(c.price)+'</div>'
+          +'<div style="font-size:0.72rem;font-weight:600;color:'+(up?'#22c55e':'#ef4444')+'">'+(up?'▲ +':'▼ ')+(c.change24||0)+'%</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+        +'<span style="font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:20px;background:'+sentBg(c.overall)+';color:'+sentClr(c.overall)+';border:1px solid '+sentClr(c.overall)+'33">'+c.overall+'</span>'
+        +'<span style="font-size:0.7rem;color:var(--muted);font-family:JetBrains Mono,monospace">'+(c.total||0)+' posts · score '+(c.avg_score||0)+'</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+        +'<div style="text-align:center;padding:10px;background:rgba(34,197,94,0.07);border-radius:10px;border:1px solid rgba(34,197,94,0.15)"><div style="font-family:JetBrains Mono,monospace;font-size:1.1rem;font-weight:700;color:#22c55e">'+(pct.BULLISH||0)+'%</div><div style="font-size:0.55rem;color:var(--muted);margin-top:3px;font-weight:600;letter-spacing:1px">BULLISH</div></div>'
+        +'<div style="text-align:center;padding:10px;background:rgba(239,68,68,0.07);border-radius:10px;border:1px solid rgba(239,68,68,0.15)"><div style="font-family:JetBrains Mono,monospace;font-size:1.1rem;font-weight:700;color:#ef4444">'+(pct.BEARISH||0)+'%</div><div style="font-size:0.55rem;color:var(--muted);margin-top:3px;font-weight:600;letter-spacing:1px">BEARISH</div></div>'
+        +'<div style="text-align:center;padding:10px;background:rgba(234,179,8,0.07);border-radius:10px;border:1px solid rgba(234,179,8,0.15)"><div style="font-family:JetBrains Mono,monospace;font-size:1.1rem;font-weight:700;color:#eab308">'+(pct.NEUTRAL||0)+'%</div><div style="font-size:0.55rem;color:var(--muted);margin-top:3px;font-weight:600;letter-spacing:1px">NEUTRAL</div></div>'
+      +'</div>'
+      +'<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden">'
+        +'<div style="display:flex;height:100%">'
+          +'<div style="width:'+(pct.BULLISH||0)+'%;background:#22c55e;transition:width 1s ease"></div>'
+          +'<div style="width:'+(pct.BEARISH||0)+'%;background:#ef4444;transition:width 1s ease"></div>'
+          +'<div style="width:'+(pct.NEUTRAL||0)+'%;background:#eab308;transition:width 1s ease"></div>'
+        +'</div>'
+      +'</div>'
+      +predHtml;
     grid.appendChild(card);
-  }});
-  if(location.hash){{const el=document.querySelector('#coin-'+location.hash.slice(1));if(el)setTimeout(()=>el.scrollIntoView({{behavior:'smooth'}}),400)}}
-}}
-async function manualRefresh(){{document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{{method:'POST'}});await load();document.getElementById('refreshBtn').disabled=false}}
+  });
+  if(location.hash){var el=document.querySelector('#coin-'+location.hash.slice(1));if(el)setTimeout(function(){el.scrollIntoView({behavior:'smooth'})},400)}
+}
+
+async function load(){
+  try{
+    let d=await(await fetch('/api/sentiment')).json();
+    if(d.data&&d.data.coins){render(d.data.coins);document.getElementById('loader').classList.add('gone');return;}
+    document.getElementById('loader').classList.remove('gone');
+    let attempts=0;
+    while(d.loading&&attempts<15){await new Promise(r=>setTimeout(r,2000));d=await(await fetch('/api/sentiment')).json();attempts++;}
+    if(d.data&&d.data.coins)render(d.data.coins);
+  }catch(e){console.error(e)}
+  document.getElementById('loader').classList.add('gone');
+}
+async function manualRefresh(){document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{method:'POST'});await load();document.getElementById('refreshBtn').disabled=false}
 load();
 </script>
 </body></html>"""
@@ -671,8 +687,8 @@ PREDICT_HTML = """<!DOCTYPE html><html lang="en"><head>
 <title>Crypto Pulse — Predict</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>{css}
-.pred-card{{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;position:relative;overflow:hidden;transition:transform 0.25s}}
-.pred-card:hover{{transform:translateY(-3px)}}
+.pred-card{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;position:relative;overflow:hidden;transition:transform 0.25s}
+.pred-card:hover{transform:translateY(-3px)}
 </style>
 </head><body>
 {nav}
@@ -681,11 +697,11 @@ PREDICT_HTML = """<!DOCTYPE html><html lang="en"><head>
     <div style="font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">AI Predictions</div>
     <h1 style="font-size:2rem;font-weight:800;letter-spacing:-1px">24h Price <span style="background:linear-gradient(90deg,#9945FF,#627EEA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Forecast</span></h1>
   </div>
-  <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:12px;padding:12px 18px;margin-bottom:28px" class="anim" style="animation-delay:0.05s">
+  <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:12px;padding:12px 18px;margin-bottom:28px" class="anim">
     <span style="font-size:0.72rem;color:#eab308;font-weight:500">⚠ Predictions are based on Reddit sentiment + price momentum only. Not financial advice. Always DYOR.</span>
   </div>
   <div id="predGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-bottom:32px"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="anim" style="animation-delay:0.3s">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="anim">
     <div class="card" style="padding:28px">
       <div class="label" style="margin-bottom:20px">Confidence by Coin</div>
       <div style="position:relative;height:260px"><canvas id="confChart"></canvas></div>
@@ -693,88 +709,93 @@ PREDICT_HTML = """<!DOCTYPE html><html lang="en"><head>
     <div class="card" style="padding:28px">
       <div class="label" style="margin-bottom:20px">How It Works</div>
       <div style="display:flex;flex-direction:column;gap:16px">
-        ${{[['📊','Sentiment Signal (50%)','VADER compound score from Reddit posts. More bullish posts = higher signal.','#F7931A'],['⚡','Momentum Signal (30%)','24-hour price change amplified ×5. Captures short-term market momentum.','#9945FF'],['📈','Trend Signal (20%)','7-day price direction ×2. Filters noise and identifies the broader trend.','#627EEA'],['🎯','Confidence Score','Agreement between all 3 signals. Full agreement = 82% confidence.','#26A17B']].map(([icon,title,body,color])=>`<div style="display:flex;gap:12px;align-items:flex-start"><div style="width:36px;height:36px;border-radius:10px;background:${{color}}18;border:1px solid ${{color}}33;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem">${{icon}}</div><div><div style="font-weight:700;font-size:0.85rem;color:${{color}};margin-bottom:3px">${{title}}</div><div style="font-size:0.78rem;color:var(--muted);line-height:1.5">${{body}}</div></div></div>`).join('')}}
+        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:36px;height:36px;border-radius:10px;background:#F7931A18;border:1px solid #F7931A33;display:flex;align-items:center;justify-content:center;flex-shrink:0">📊</div><div><div style="font-weight:700;font-size:0.85rem;color:#F7931A;margin-bottom:3px">Sentiment Signal (50%)</div><div style="font-size:0.78rem;color:var(--muted);line-height:1.5">VADER compound score from Reddit posts. More bullish posts = higher signal.</div></div></div>
+        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:36px;height:36px;border-radius:10px;background:#9945FF18;border:1px solid #9945FF33;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚡</div><div><div style="font-weight:700;font-size:0.85rem;color:#9945FF;margin-bottom:3px">Momentum Signal (30%)</div><div style="font-size:0.78rem;color:var(--muted);line-height:1.5">24-hour price change amplified ×5. Captures short-term momentum.</div></div></div>
+        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:36px;height:36px;border-radius:10px;background:#627EEA18;border:1px solid #627EEA33;display:flex;align-items:center;justify-content:center;flex-shrink:0">📈</div><div><div style="font-weight:700;font-size:0.85rem;color:#627EEA;margin-bottom:3px">Trend Signal (20%)</div><div style="font-size:0.78rem;color:var(--muted);line-height:1.5">7-day price direction ×2. Filters noise, captures broader trend.</div></div></div>
+        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:36px;height:36px;border-radius:10px;background:#26A17B18;border:1px solid #26A17B33;display:flex;align-items:center;justify-content:center;flex-shrink:0">🎯</div><div><div style="font-weight:700;font-size:0.85rem;color:#26A17B;margin-bottom:3px">Confidence Score</div><div style="font-size:0.78rem;color:var(--muted);line-height:1.5">How aligned are all 3 signals. Full agreement = 82% confidence.</div></div></div>
       </div>
     </div>
   </div>
 </div>
 <script>
-const COIN_COLORS={{'bitcoin':'#F7931A','ethereum':'#627EEA','solana':'#9945FF','tether':'#26A17B','binancecoin':'#F3BA2F'}};
+const COIN_COLORS={'bitcoin':'#F7931A','ethereum':'#627EEA','solana':'#9945FF','tether':'#26A17B','binancecoin':'#F3BA2F'};
 const COIN_ORDER=['bitcoin','ethereum','solana','tether','binancecoin'];
 let confChart=null;
-function fmt(p){{if(!p)return'—';if(p>=1000)return'$'+p.toLocaleString('en-US',{{minimumFractionDigits:2,maximumFractionDigits:2}});return'$'+p.toLocaleString('en-US',{{minimumFractionDigits:2,maximumFractionDigits:4}})}}
+function fmt(p){if(!p)return'—';if(p>=1000)return'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});return'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4})}
+function dirEmoji(d){return{UP:'📈',DOWN:'📉',SIDEWAYS:'➡️'}[d]||'➡️'}
+function dirClr(d){return{UP:'#22c55e',DOWN:'#ef4444',SIDEWAYS:'#eab308'}[d]||'#888'}
 
-async function load(){{
-  try{{
-    let d=await(await fetch('/api/sentiment')).json();
-    if(d.data&&d.data.coins){{render(d.data.coins);document.getElementById('loader').classList.add('gone');return;}}
-    document.getElementById('loader').classList.remove('gone');
-    let attempts=0;while(d.loading&&attempts<15){{await new Promise(r=>setTimeout(r,2000));d=await(await fetch(`/api/sentiment`)).json();attempts++;}}
-    if(d.data&&d.data.coins)render(d.data.coins);
-  }}catch(e){{console.error(e)}}
-  document.getElementById('loader').classList.add('gone');
-}}
-
-function render(coins){{
+function render(coins){
   const grid=document.getElementById('predGrid');
   grid.innerHTML='';
   const confLabels=[],confData=[],confBgColors=[];
-  COIN_ORDER.forEach((k,i)=>{{
-    const c=coins[k];if(!c||!c.prediction)return;
+  COIN_ORDER.forEach(function(k,i){
+    const c=coins[k];
+    if(!c||!c.prediction)return;
     const p=c.prediction;
     const color=COIN_COLORS[k]||'#888';
-    const dirColor={{UP:'#22c55e',DOWN:'#ef4444',SIDEWAYS:'#eab308'}}[p.direction];
-    const dirEmoji={{UP:'📈',DOWN:'📉',SIDEWAYS:'➡️'}}[p.direction];
+    const dc=dirClr(p.direction);
     confLabels.push(c.symbol);confData.push(p.confidence);confBgColors.push(color+'bb');
-
     const sBar=Math.max(0,Math.min(100,(p.sent_signal+100)/2));
     const mBar=Math.max(0,Math.min(100,(p.mom_signal+100)/2));
     const tBar=Math.max(0,Math.min(100,(p.trend_signal+100)/2));
-
+    const sClr=p.sent_signal>0?'#22c55e':p.sent_signal<0?'#ef4444':'#eab308';
+    const mClr=p.mom_signal>0?'#22c55e':p.mom_signal<0?'#ef4444':'#eab308';
+    const tClr=p.trend_signal>0?'#22c55e':p.trend_signal<0?'#ef4444':'#eab308';
     const card=document.createElement('div');
     card.className='pred-card anim';
-    card.style.cssText+='animation-delay:'+(i*0.07)+'s;border-color:'+color+'33';
-    card.innerHTML=`
-      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:${color};filter:blur(50px);opacity:0.12;pointer-events:none"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:1.5rem">${{c.emoji}}</span>
-          <div><div style="font-weight:800;font-size:1.1rem">${{c.symbol}}</div><div style="font-size:0.7rem;color:var(--muted);font-family:JetBrains Mono,monospace">${{fmt(p.current_price)}}</div></div>
-        </div>
-        <div style="text-align:right">
-          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
-            <span style="font-size:1.2rem">${{dirEmoji}}</span>
-            <span style="font-size:1rem;font-weight:800;color:${{dirColor}};letter-spacing:0.5px">${{p.direction}}</span>
-          </div>
-          <div style="font-size:0.65rem;color:var(--muted);font-family:JetBrains Mono,monospace;margin-top:2px">${{p.confidence}}% confidence</div>
-        </div>
-      </div>
-      <div style="margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:0.65rem;font-weight:600;color:var(--muted);letter-spacing:1px">CONFIDENCE</span><span style="font-size:0.65rem;font-family:JetBrains Mono,monospace;color:${{dirColor}}">${{p.confidence}}%</span></div>
-        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${{p.confidence}}%;background:${{color}};border-radius:3px;transition:width 1s ease;box-shadow:0 0 8px ${{color}}66"></div></div>
-      </div>
-      <div style="background:${{dirColor}}11;border:1px solid ${{dirColor}}33;border-radius:12px;padding:14px;margin-bottom:18px;text-align:center">
-        <div style="font-size:0.6rem;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:8px">24H TARGET RANGE</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-          <div><div style="font-size:0.6rem;color:var(--muted);margin-bottom:3px">LOW</div><div style="font-family:JetBrains Mono,monospace;font-size:1rem;font-weight:700;color:${{dirColor}}">${{fmt(p.target_lo)}}</div></div>
-          <div style="color:var(--muted);font-size:1.2rem">→</div>
-          <div><div style="font-size:0.6rem;color:var(--muted);margin-bottom:3px">HIGH</div><div style="font-family:JetBrains Mono,monospace;font-size:1rem;font-weight:700;color:${{dirColor}}">${{fmt(p.target_hi)}}</div></div>
-        </div>
-      </div>
-      ${{[['SENTIMENT','50%',p.sent_signal,sBar],['MOMENTUM','30%',p.mom_signal,mBar],['7D TREND','20%',p.trend_signal,tBar]].map(([lbl,wt,val,bar])=>{{const vc=val>0?'#22c55e':val<0?'#ef4444':'#eab308';return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.6rem;color:var(--muted);font-weight:600;letter-spacing:1px">${{lbl}} <span style="color:var(--muted);font-weight:400">(${{wt}})</span></span><span style="font-size:0.6rem;font-family:JetBrains Mono,monospace;color:${{vc}}">${{val>0?'+':''}}${{val}}</span></div><div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:${{bar}}%;background:${{vc}};border-radius:2px"></div></div></div>`}}).join('')}}
-    `;
+    card.style.animationDelay=(i*0.07)+'s';
+    card.style.borderColor=color+'33';
+    card.innerHTML=''
+      +'<div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:'+color+';filter:blur(50px);opacity:0.12;pointer-events:none"></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
+        +'<div style="display:flex;align-items:center;gap:10px">'
+          +'<span style="font-size:1.5rem">'+c.emoji+'</span>'
+          +'<div><div style="font-weight:800;font-size:1.1rem">'+c.symbol+'</div>'
+          +'<div style="font-size:0.7rem;color:var(--muted);font-family:JetBrains Mono,monospace">'+fmt(p.current_price)+'</div></div>'
+        +'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">'
+            +'<span style="font-size:1.2rem">'+dirEmoji(p.direction)+'</span>'
+            +'<span style="font-size:1rem;font-weight:800;color:'+dc+'">'+p.direction+'</span>'
+          +'</div>'
+          +'<div style="font-size:0.65rem;color:var(--muted);font-family:JetBrains Mono,monospace">'+p.confidence+'% confidence</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="margin-bottom:18px">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:0.65rem;font-weight:600;color:var(--muted);letter-spacing:1px">CONFIDENCE</span><span style="font-size:0.65rem;font-family:JetBrains Mono,monospace;color:'+dc+'">'+p.confidence+'%</span></div>'
+        +'<div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+p.confidence+'%;background:'+color+';border-radius:3px;transition:width 1s ease;box-shadow:0 0 8px '+color+'66"></div></div>'
+      +'</div>'
+      +'<div style="background:'+dc+'11;border:1px solid '+dc+'33;border-radius:12px;padding:14px;margin-bottom:18px;text-align:center">'
+        +'<div style="font-size:0.6rem;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:8px">24H TARGET RANGE</div>'
+        +'<div style="display:flex;align-items:center;justify-content:center;gap:16px">'
+          +'<div><div style="font-size:0.6rem;color:var(--muted);margin-bottom:3px">LOW</div><div style="font-family:JetBrains Mono,monospace;font-size:1rem;font-weight:700;color:'+dc+'">'+fmt(p.target_lo)+'</div></div>'
+          +'<div style="color:var(--muted);font-size:1.2rem">→</div>'
+          +'<div><div style="font-size:0.6rem;color:var(--muted);margin-bottom:3px">HIGH</div><div style="font-family:JetBrains Mono,monospace;font-size:1rem;font-weight:700;color:'+dc+'">'+fmt(p.target_hi)+'</div></div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.6rem;color:var(--muted);font-weight:600;letter-spacing:1px">SENTIMENT (50%)</span><span style="font-size:0.6rem;font-family:JetBrains Mono,monospace;color:'+sClr+'">'+(p.sent_signal>0?'+':'')+p.sent_signal+'</span></div><div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+sBar+'%;background:'+sClr+';border-radius:2px"></div></div></div>'
+      +'<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.6rem;color:var(--muted);font-weight:600;letter-spacing:1px">MOMENTUM (30%)</span><span style="font-size:0.6rem;font-family:JetBrains Mono,monospace;color:'+mClr+'">'+(p.mom_signal>0?'+':'')+p.mom_signal+'</span></div><div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+mBar+'%;background:'+mClr+';border-radius:2px"></div></div></div>'
+      +'<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.6rem;color:var(--muted);font-weight:600;letter-spacing:1px">7D TREND (20%)</span><span style="font-size:0.6rem;font-family:JetBrains Mono,monospace;color:'+tClr+'">'+(p.trend_signal>0?'+':'')+p.trend_signal+'</span></div><div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+tBar+'%;background:'+tClr+';border-radius:2px"></div></div></div>';
     grid.appendChild(card);
-  }});
-
+  });
   const ctx=document.getElementById('confChart').getContext('2d');
   if(confChart)confChart.destroy();
-  confChart=new Chart(ctx,{{
-    type:'bar',
-    data:{{labels:confLabels,datasets:[{{label:'Confidence %',data:confData,backgroundColor:confBgColors,borderColor:confBgColors.map(c=>c.replace('bb','ff')),borderWidth:1,borderRadius:8}}]}},
-    options:{{responsive:true,maintainAspectRatio:false,scales:{{x:{{ticks:{{color:'#555568',font:{{family:'Outfit',size:11,weight:'600'}}}},grid:{{color:'rgba(255,255,255,0.04)'}}}},y:{{min:0,max:100,ticks:{{color:'#555568',font:{{family:'JetBrains Mono',size:10}},callback:v=>v+'%'}},grid:{{color:'rgba(255,255,255,0.04)'}}}}}},plugins:{{legend:{{display:false}},tooltip:{{backgroundColor:'rgba(22,22,31,0.95)',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,callbacks:{{label:c=>c.parsed.y+'% confidence'}}}}}}}}
-  }});
-}}
-async function manualRefresh(){{document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{{method:'POST'}});await load();document.getElementById('refreshBtn').disabled=false}}
+  confChart=new Chart(ctx,{type:'bar',data:{labels:confLabels,datasets:[{label:'Confidence %',data:confData,backgroundColor:confBgColors,borderColor:confBgColors,borderWidth:1,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#555568',font:{family:'Outfit',size:11,weight:'600'}},grid:{color:'rgba(255,255,255,0.04)'}},y:{min:0,max:100,ticks:{color:'#555568',font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%'}},grid:{color:'rgba(255,255,255,0.04)'}}},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(22,22,31,0.95)',borderColor:'rgba(255,255,255,0.1)',borderWidth:1}}}});
+}
+
+async function load(){
+  try{
+    let d=await(await fetch('/api/sentiment')).json();
+    if(d.data&&d.data.coins){render(d.data.coins);document.getElementById('loader').classList.add('gone');return;}
+    document.getElementById('loader').classList.remove('gone');
+    let attempts=0;
+    while(d.loading&&attempts<15){await new Promise(r=>setTimeout(r,2000));d=await(await fetch('/api/sentiment')).json();attempts++;}
+    if(d.data&&d.data.coins)render(d.data.coins);
+  }catch(e){console.error(e)}
+  document.getElementById('loader').classList.add('gone');
+}
+async function manualRefresh(){document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{method:'POST'});await load();document.getElementById('refreshBtn').disabled=false}
 load();
 </script>
 </body></html>"""
@@ -786,13 +807,13 @@ POSTS_HTML = """<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crypto Pulse — Posts</title>
 <style>{css}
-.fbtn{{font-size:0.75rem;font-weight:600;padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s}}
-.fbtn:hover,.fbtn.active{{color:white;background:var(--surface2);border-color:rgba(255,255,255,0.2)}}
-.fbtn.f-bull.active{{color:#22c55e;border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.08)}}
-.fbtn.f-bear.active{{color:#ef4444;border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.08)}}
-.fbtn.f-neut.active{{color:#eab308;border-color:rgba(234,179,8,0.3);background:rgba(234,179,8,0.08)}}
-.post-row{{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;transition:all 0.2s;animation:fadeUp 0.35s ease both}}
-.post-row:hover{{transform:translateX(5px);border-color:rgba(255,255,255,0.15);background:var(--surface2)}}
+.fbtn{font-size:0.75rem;font-weight:600;padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s}
+.fbtn:hover,.fbtn.active{color:white;background:var(--surface2);border-color:rgba(255,255,255,0.2)}
+.fbtn.f-bull.active{color:#22c55e;border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.08)}
+.fbtn.f-bear.active{color:#ef4444;border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.08)}
+.fbtn.f-neut.active{color:#eab308;border-color:rgba(234,179,8,0.3);background:rgba(234,179,8,0.08)}
+.post-row{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;transition:all 0.2s;animation:fadeUp 0.35s ease both}
+.post-row:hover{transform:translateX(5px);border-color:rgba(255,255,255,0.15);background:var(--surface2)}
 </style>
 </head><body>
 {nav}
@@ -813,32 +834,51 @@ POSTS_HTML = """<!DOCTYPE html><html lang="en"><head>
 </div>
 <script>
 let allPosts=[],cur='ALL';
-const sentBg={{BULLISH:'rgba(34,197,94,0.1)',BEARISH:'rgba(239,68,68,0.1)',NEUTRAL:'rgba(234,179,8,0.1)'}};
-const sentClr={{BULLISH:'#22c55e',BEARISH:'#ef4444',NEUTRAL:'#eab308'}};
-function filter(f){{cur=f;document.querySelectorAll('.fbtn').forEach(b=>{{b.classList.remove('active');if(b.dataset.f===f)b.classList.add('active')}});render()}}
-function render(){{
+function sentBg(s){return{BULLISH:'rgba(34,197,94,0.1)',BEARISH:'rgba(239,68,68,0.1)',NEUTRAL:'rgba(234,179,8,0.1)'}[s]||''}
+function sentClr(s){return{BULLISH:'#22c55e',BEARISH:'#ef4444',NEUTRAL:'#eab308'}[s]||'#888'}
+
+function filter(f){
+  cur=f;
+  document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');if(b.dataset.f===f)b.classList.add('active')});
+  render();
+}
+
+function render(){
   const grid=document.getElementById('postGrid');
-  const posts=cur==='ALL'?allPosts:allPosts.filter(p=>p.label===cur);
+  const posts=cur==='ALL'?allPosts:allPosts.filter(function(p){return p.label===cur});
   grid.innerHTML='';
-  if(!posts.length){{grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--muted);font-size:0.85rem">No posts found</div>';return}}
-  posts.forEach((p,i)=>{{
+  if(!posts.length){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--muted);font-size:0.85rem">No posts found</div>';return}
+  posts.forEach(function(p,i){
     const sc=p.compound>0?'#22c55e':p.compound<0?'#ef4444':'#eab308';
-    const div=document.createElement('div');div.className='post-row';div.style.animationDelay=(i*0.02)+'s';
-    div.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;width:76px"><span style="font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:6px;background:${{sentBg[p.label]}};color:${{sentClr[p.label]}};letter-spacing:0.5px;text-align:center">${{p.label}}</span><span style="font-size:0.7rem;font-family:JetBrains Mono,monospace;color:${{sc}}">${{p.compound>0?'+':''}}${{p.compound.toFixed(3)}}</span><span style="font-size:0.6rem;color:var(--muted)">↑ ${{p.upvotes}}</span></div><div style="flex:1;min-width:0;border-left:1px solid var(--border);padding-left:14px"><div style="font-size:0.88rem;font-weight:500;line-height:1.5;margin-bottom:5px">${{p.title}}</div><div style="font-size:0.65rem;color:var(--muted);font-family:JetBrains Mono,monospace">${{p.source}}</div></div>`;
+    const div=document.createElement('div');
+    div.className='post-row';
+    div.style.animationDelay=(i*0.02)+'s';
+    div.innerHTML=''
+      +'<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;width:76px">'
+        +'<span style="font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:6px;background:'+sentBg(p.label)+';color:'+sentClr(p.label)+';letter-spacing:0.5px;text-align:center">'+p.label+'</span>'
+        +'<span style="font-size:0.7rem;font-family:JetBrains Mono,monospace;color:'+sc+'">'+(p.compound>0?'+':'')+p.compound.toFixed(3)+'</span>'
+        +'<span style="font-size:0.6rem;color:var(--muted)">↑ '+p.upvotes+'</span>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0;border-left:1px solid var(--border);padding-left:14px">'
+        +'<div style="font-size:0.88rem;font-weight:500;line-height:1.5;margin-bottom:5px">'+p.title+'</div>'
+        +'<div style="font-size:0.65rem;color:var(--muted);font-family:JetBrains Mono,monospace">'+p.source+'</div>'
+      +'</div>';
     grid.appendChild(div);
-  }});
-}}
-async function load(){{
-  try{{
+  });
+}
+
+async function load(){
+  try{
     let d=await(await fetch('/api/sentiment')).json();
-    if(d.data){{allPosts=d.data.posts||[];render();document.getElementById('loader').classList.add('gone');return;}}
+    if(d.data){allPosts=d.data.posts||[];render();document.getElementById('loader').classList.add('gone');return;}
     document.getElementById('loader').classList.remove('gone');
-    let attempts=0;while(d.loading&&attempts<15){{await new Promise(r=>setTimeout(r,2000));d=await(await fetch(`/api/sentiment`)).json();attempts++;}}
-    if(d.data){{allPosts=d.data.posts||[];render()}}
-  }}catch(e){{console.error(e)}}
+    let attempts=0;
+    while(d.loading&&attempts<15){await new Promise(r=>setTimeout(r,2000));d=await(await fetch('/api/sentiment')).json();attempts++;}
+    if(d.data){allPosts=d.data.posts||[];render()}
+  }catch(e){console.error(e)}
   document.getElementById('loader').classList.add('gone');
-}}
-async function manualRefresh(){{document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{{method:'POST'}});await load();document.getElementById('refreshBtn').disabled=false}}
+}
+async function manualRefresh(){document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{method:'POST'});await load();document.getElementById('refreshBtn').disabled=false}
 load();
 </script>
 </body></html>"""
@@ -892,7 +932,7 @@ ABOUT_HTML = """<!DOCTYPE html><html lang="en"><head>
   <!-- HOW SENTIMENT WORKS -->
   <div class="about-section anim" style="animation-delay:0.1s">
     <h2><span style="font-size:1.3rem">🧠</span> <span style="color:#9945FF">How we measure sentiment</span></h2>
-    <p>Each post is scored using <strong>VADER</strong> a natural language processing model built specifically for social media text. VADER reads each post and assigns it a compound score between <strong>-1</strong> (extremely negative) and <strong>+1</strong> (extremely positive).</p>
+    <p>Each post is scored using <strong>VADER</strong> — a natural language processing model built specifically for social media text. VADER reads each post and assigns it a compound score between <strong>-1</strong> (extremely negative) and <strong>+1</strong> (extremely positive).</p>
     <p>But crypto Twitter and Reddit have their own language. Words like <strong>"moon"</strong>, <strong>"hodl"</strong>, and <strong>"ath"</strong> mean very different things in crypto than in everyday English. So on top of VADER, we layer a custom crypto keyword system that understands the community's language — boosting scores for bullish terms and reducing them for bearish ones like <strong>"rug"</strong>, <strong>"liquidation"</strong>, or <strong>"depeg"</strong>.</p>
     <p>A post scoring above <strong>+0.05</strong> is classified as Bullish. Below <strong>-0.05</strong> is Bearish. Everything in between is Neutral. The overall market mood for each coin is determined by averaging the scores of all its recent posts.</p>
   </div>
@@ -907,7 +947,7 @@ ABOUT_HTML = """<!DOCTYPE html><html lang="en"><head>
   <!-- PREDICTIONS -->
   <div class="about-section anim" style="animation-delay:0.2s">
     <h2><span style="font-size:1.3rem">🔮</span> <span style="color:#627EEA">How predictions are made</span></h2>
-    <p>The 24-hour price forecast combines three signals into a single directional prediction. <strong>Sentiment (50%)</strong> what Reddit is saying right now. <strong>Momentum (30%)</strong> whether the price has been moving up or down in the last 24 hours. <strong>Trend (20%)</strong> the broader 7-day price direction.</p>
+    <p>The 24-hour price forecast combines three signals into a single directional prediction. <strong>Sentiment (50%)</strong>  what Reddit is saying right now. <strong>Momentum (30%)</strong>  whether the price has been moving up or down in the last 24 hours. <strong>Trend (20%)</strong>  the broader 7-day price direction.</p>
     <p>When all three signals agree, confidence is high. When they point in different directions for example, Reddit is bullish but the price has been dropping  confidence is lower and the prediction is treated with more caution.</p>
     <p style="color:#eab308;font-size:0.82rem">⚠ These predictions are indicators, not guarantees. Crypto is highly volatile and no model can reliably predict short-term price moves. Always do your own research before making any trading decisions.</p>
   </div>
