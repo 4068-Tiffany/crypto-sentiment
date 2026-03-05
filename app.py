@@ -849,21 +849,82 @@ load();
 ABOUT_HTML = """<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crypto Pulse — About</title>
-<style>{css}</style>
+<style>{css}
+.about-hero{{background:linear-gradient(135deg,rgba(247,147,26,0.08),rgba(153,69,255,0.08));border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:40px;margin-bottom:28px;position:relative;overflow:hidden}}
+.about-hero::before{{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(247,147,26,0.15),transparent 70%);pointer-events:none}}
+.about-section{{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:32px;margin-bottom:16px}}
+.about-section h2{{font-size:1.1rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:10px}}
+.about-section p{{font-size:0.88rem;color:#9090a8;line-height:1.8;margin-bottom:12px}}
+.about-section p:last-child{{margin-bottom:0}}
+.about-section strong{{color:var(--text);font-weight:600}}
+.coin-pills{{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}}
+.coin-pill{{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1px solid}}
+.tech-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:16px}}
+.tech-item{{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px}}
+.tech-item-name{{font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:3px}}
+.tech-item-desc{{font-size:0.68rem;color:var(--muted)}}
+</style>
 </head><body>
 {nav}
 <div class="page" style="max-width:860px">
-  <div class="anim" style="margin-bottom:40px">
-    <div style="font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">About</div>
-    <h1 style="font-size:2.2rem;font-weight:800;letter-spacing:-1px;line-height:1.2">How <span style="background:linear-gradient(90deg,#F7931A,#9945FF,#627EEA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Crypto Pulse</span> Works</h1>
+
+  <!-- HERO -->
+  <div class="about-hero anim">
+    <div style="font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">About Crypto Pulse</div>
+    <h1 style="font-size:2rem;font-weight:900;letter-spacing:-1px;line-height:1.3;margin-bottom:16px">Your real-time window into<br><span style="background:linear-gradient(90deg,#F7931A,#9945FF,#627EEA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">crypto market sentiment</span></h1>
+    <p style="font-size:0.92rem;color:#9090a8;line-height:1.8;max-width:600px">Crypto Pulse tracks what people are actually saying about crypto on Reddit — right now. It turns thousands of social media posts into clear, actionable sentiment signals so you can understand the mood of the market at a glance.</p>
   </div>
-  <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
-    {cards}
+
+  <!-- WHAT IT DOES -->
+  <div class="about-section anim" style="animation-delay:0.05s">
+    <h2><span style="font-size:1.3rem">📡</span> <span style="color:#F7931A">Where the data comes from</span></h2>
+    <p>Every few minutes, Crypto Pulse scans the most active crypto communities on Reddit. We pull the freshest posts from subreddits dedicated to each coin — places like r/Bitcoin, r/ethereum, r/solana, r/binance, and more — as well as general crypto communities like r/CryptoCurrency and r/CryptoMarkets.</p>
+    <p>We focus on <strong>new posts</strong> rather than trending ones, because we want to capture what people are talking about right now, not what was popular yesterday. For each coin we collect around 15 posts per subreddit, giving us a solid sample of current community sentiment.</p>
+    <div class="coin-pills">
+      <div class="coin-pill" style="background:rgba(247,147,26,0.1);color:#F7931A;border-color:rgba(247,147,26,0.25)">₿ Bitcoin</div>
+      <div class="coin-pill" style="background:rgba(99,126,234,0.1);color:#627EEA;border-color:rgba(99,126,234,0.25)">Ξ Ethereum</div>
+      <div class="coin-pill" style="background:rgba(153,69,255,0.1);color:#9945FF;border-color:rgba(153,69,255,0.25)">◎ Solana</div>
+      <div class="coin-pill" style="background:rgba(38,161,123,0.1);color:#26A17B;border-color:rgba(38,161,123,0.25)">₮ Tether</div>
+      <div class="coin-pill" style="background:rgba(243,186,47,0.1);color:#F3BA2F;border-color:rgba(243,186,47,0.25)">⬡ BNB</div>
+    </div>
   </div>
-  <div class="card anim" style="padding:28px;animation-delay:0.5s">
-    <div class="label" style="margin-bottom:18px">Tech Stack</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">{tech}</div>
+
+  <!-- HOW SENTIMENT WORKS -->
+  <div class="about-section anim" style="animation-delay:0.1s">
+    <h2><span style="font-size:1.3rem">🧠</span> <span style="color:#9945FF">How we measure sentiment</span></h2>
+    <p>Each post is scored using <strong>VADER</strong> — a natural language processing model built specifically for social media text. VADER reads each post and assigns it a compound score between <strong>-1</strong> (extremely negative) and <strong>+1</strong> (extremely positive).</p>
+    <p>But crypto Twitter and Reddit have their own language. Words like <strong>"moon"</strong>, <strong>"hodl"</strong>, and <strong>"ath"</strong> mean very different things in crypto than in everyday English. So on top of VADER, we layer a custom crypto keyword system that understands the community's language — boosting scores for bullish terms and reducing them for bearish ones like <strong>"rug"</strong>, <strong>"liquidation"</strong>, or <strong>"depeg"</strong>.</p>
+    <p>A post scoring above <strong>+0.05</strong> is classified as Bullish. Below <strong>-0.05</strong> is Bearish. Everything in between is Neutral. The overall market mood for each coin is determined by averaging the scores of all its recent posts.</p>
   </div>
+
+  <!-- USDT SPECIAL -->
+  <div class="about-section anim" style="animation-delay:0.15s">
+    <h2><span style="font-size:1.3rem">₮</span> <span style="color:#26A17B">Tether is different</span></h2>
+    <p>USDT is a stablecoin — it's not supposed to go up or down in price. So measuring whether people are "bullish" on USDT doesn't make much sense. Instead, Crypto Pulse measures something more useful: <strong>peg health</strong>.</p>
+    <p>For Tether, a Bullish sentiment means the community trusts the peg — people are talking about reserves, transparency, and stability. A Bearish sentiment means depeg anxiety is rising — discussions of lawsuits, insolvency fears, or FUD are dominating. This gives you an early warning signal before a potential peg event.</p>
+  </div>
+
+  <!-- PREDICTIONS -->
+  <div class="about-section anim" style="animation-delay:0.2s">
+    <h2><span style="font-size:1.3rem">🔮</span> <span style="color:#627EEA">How predictions are made</span></h2>
+    <p>The 24-hour price forecast combines three signals into a single directional prediction. <strong>Sentiment (50%)</strong> — what Reddit is saying right now. <strong>Momentum (30%)</strong> — whether the price has been moving up or down in the last 24 hours. <strong>Trend (20%)</strong> — the broader 7-day price direction.</p>
+    <p>When all three signals agree, confidence is high. When they point in different directions — for example, Reddit is bullish but the price has been dropping — confidence is lower and the prediction is treated with more caution.</p>
+    <p style="color:#eab308;font-size:0.82rem">⚠ These predictions are indicators, not guarantees. Crypto is highly volatile and no model can reliably predict short-term price moves. Always do your own research before making any trading decisions.</p>
+  </div>
+
+  <!-- TECH -->
+  <div class="about-section anim" style="animation-delay:0.25s">
+    <h2><span style="font-size:1.3rem">⚙️</span> <span style="color:var(--muted)">Built with</span></h2>
+    <div class="tech-grid">
+      <div class="tech-item"><div class="tech-item-name" style="color:#F7931A">Python</div><div class="tech-item-desc">Core backend language</div></div>
+      <div class="tech-item"><div class="tech-item-name" style="color:#9945FF">Flask</div><div class="tech-item-desc">Web server framework</div></div>
+      <div class="tech-item"><div class="tech-item-name" style="color:#627EEA">VADER NLP</div><div class="tech-item-desc">Sentiment analysis engine</div></div>
+      <div class="tech-item"><div class="tech-item-name" style="color:#26A17B">Chart.js</div><div class="tech-item-desc">Data visualizations</div></div>
+      <div class="tech-item"><div class="tech-item-name" style="color:#F3BA2F">Reddit JSON API</div><div class="tech-item-desc">No API key needed</div></div>
+      <div class="tech-item"><div class="tech-item-name" style="color:#F7931A">CoinGecko API</div><div class="tech-item-desc">Live price data</div></div>
+    </div>
+  </div>
+
 </div>
 <script>document.getElementById('loader').classList.add('gone');async function manualRefresh(){{document.getElementById('refreshBtn').disabled=true;await fetch('/api/refresh',{{method:'POST'}});document.getElementById('refreshBtn').disabled=false}}</script>
 </body></html>"""
