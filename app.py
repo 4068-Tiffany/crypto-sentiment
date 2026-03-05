@@ -706,7 +706,7 @@ function fmt(p){
 // Live clock
 function updateClock(){
   const now=new Date();
-  document.getElementById('liveTime').textContent=now.toUTCString().replace(' GMT','  UTC');
+  document.getElementById('liveTime').textContent=now.toLocaleString()+' (LOCAL)';
 }
 setInterval(updateClock,1000);updateClock();
 
