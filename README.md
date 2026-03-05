@@ -4,7 +4,7 @@
 
 Crypto Pulse scans Reddit every 5 minutes across 5 major cryptocurrencies, runs natural language processing on thousands of posts, and delivers live sentiment signals so you can see what the crypto community is actually feeling right now.
 
-**[🔴 Live Demo →](https://crypto-sentiment-nqiy.onrender.com)**
+**[🔴 Live Demo →](https://crypto-sentiment-fxp6.onrender.com)**
 
 ---
 
@@ -133,4 +133,3 @@ PORT=10000   (set automatically by Render)
 ## License
 
 MIT
-   **[🔴 Live Demo →](https://crypto-sentiment-fxp6.onrender.com)**
